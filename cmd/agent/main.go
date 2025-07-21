@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/faanross/spinnekop/internal/crafter"
 	"github.com/faanross/spinnekop/internal/models"
 	"github.com/faanross/spinnekop/internal/validate"
 	"gopkg.in/yaml.v3"
@@ -46,8 +47,16 @@ func main() {
 			}
 		}
 		return
+	} else {
+		fmt.Println("✅ DNS request configuration is valid!")
 	}
 
-	fmt.Println("✅ DNS request configuration is valid!")
+	dnsMsg, err := crafter.BuildDNSRequest(dnsRequest)
+	if err != nil {
+		fmt.Printf("Error building DNS request using miekg: %v\n", err)
+		return
+	}
+
+	// NOW WE WILL MANUALLY CRAFT Z-VALUE
 
 }
