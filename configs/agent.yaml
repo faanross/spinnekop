@@ -40,10 +40,16 @@ header:
   rcode: 0
 
   # --- Section Counts ---
-  # For a standard query, we have 1 question and 0 for everything else.
+  # question_count HAS to be 1
   question_count: 1
+
+  # answer_count HAS to be 0
   answer_count: 0
+
+  # ns_count HAS to be 0
   ns_count: 0
+
+  # additional_count HAS to 0 (standard) or 1 (edns)
   additional_count: 0
 
 question:

@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"github.com/faanross/spinnekop/internal/models"
+	"github.com/faanross/spinnekop/internal/validate"
+	"gopkg.in/yaml.v3"
 	"os"
 )
 
@@ -10,12 +13,33 @@ var pathToYamlFile = "./configs/agent.yaml"
 
 func main() {
 
-	// read yaml-file from disk
-
+	// (1) read yaml-file from disk
 	yamlFile, err := os.ReadFile(pathToYamlFile)
 	if err != nil {
 		fmt.Printf("Error reading YAML file: %v\n", err)
 		return
+	}
+
+	// fmt.Println(string(yamlFile))
+
+	// (2) DNS request struct + unmarshall
+
+	var dnsRequest models.DNSRequest
+	err = yaml.Unmarshal(yamlFile, &dnsRequest)
+	if err != nil {
+		fmt.Printf("Error unmarshalling YAML file: %v\n", err)
+		return
+	}
+
+	// fmt.Printf("%+v\n", dnsRequest)
+
+	// (3) Validate request fields
+	var errs []error
+
+	errs = validate.ValidateRequest(&dnsRequest)
+
+	for _, err := range errs {
+
 	}
 
 }
