@@ -4,10 +4,27 @@ import (
 	"fmt"
 	"github.com/faanross/spinnekop/internal/models"
 	"net"
+	"strings"
 )
 
+// ValidationErrors is a custom error type that holds a slice of validation errors.
+type ValidationErrors []error
+
+// Error implements the error interface for ValidationErrors.
+// It joins all the underlying errors into a single string.
+func (v ValidationErrors) Error() string {
+	var b strings.Builder
+
+	b.WriteString("validation failed with the following errors:\n")
+	for _, err := range v {
+		b.WriteString(fmt.Sprintf("- %s\n", err))
+	}
+	return b.String()
+}
+
 func ValidateRequest(dnsRequest *models.DNSRequest) error {
-	var validateErrs []error
+
+	var validateErrs ValidationErrors
 
 	// HEADER SECTION VALIDATION
 
@@ -26,40 +43,56 @@ func ValidateRequest(dnsRequest *models.DNSRequest) error {
 		validateErrs = append(validateErrs, fmt.Errorf("RCode must be between 0 and 15, but got %d", dnsRequest.Header.RCode))
 	}
 
+	// Header.QuestionCount has to be 1
 	if dnsRequest.Header.QuestionCount != 1 {
 		validateErrs = append(validateErrs, fmt.Errorf("QuestionCount MUST be 1, but got %d", dnsRequest.Header.QuestionCount))
 	}
 
+	// Header.AnswerCount has to be 0
 	if dnsRequest.Header.AnswerCount != 0 {
 		validateErrs = append(validateErrs, fmt.Errorf("AnswerCount MUST be 0, but got %d", dnsRequest.Header.AnswerCount))
 	}
 
+	// Header.AuthorityCount has to be 0
 	if dnsRequest.Header.AuthorityCount != 0 {
 		validateErrs = append(validateErrs, fmt.Errorf("AuthorityCount MUST be 0, but got %d", dnsRequest.Header.AuthorityCount))
 	}
 
+	// Header.AdditionalCount has to be 0 or 1
+	if dnsRequest.Header.AdditionalCount != 0 && dnsRequest.Header.AdditionalCount != 1 {
+		validateErrs = append(validateErrs, fmt.Errorf("AdditionalCount MUST be 0 or 1, but got %d", dnsRequest.Header.AdditionalCount))
+
+	}
+
 	// QUESTION SECTION VALIDATION
+	// make sure Question.Type appears in our QTypeMap
 	if _, ok := models.QTypeMap[dnsRequest.Question.Type]; !ok {
 		validateErrs = append(validateErrs, fmt.Errorf("invalid question type: %s", dnsRequest.Question.Type))
 	}
 
+	// make sure Question.Class appears in our QClassMap
 	if _, ok := models.QClassMap[dnsRequest.Question.Class]; !ok {
 		validateErrs = append(validateErrs, fmt.Errorf("invalid question class: %s", dnsRequest.Question.Class))
 	}
 
 	// RESOLVER SECTION VALIDATION
-	if net.ParseIP(dnsRequest.Resolver.IP) == nil {
-		validateErrs = append(validateErrs, fmt.Errorf("resolver IP is not a valid IP address: %s", dnsRequest.Resolver.IP))
-	}
 
-	if dnsRequest.Resolver.Port < 1 || dnsRequest.Resolver.Port > 65535 {
-		validateErrs = append(validateErrs, fmt.Errorf("resolver port is not a valid port number: %d", dnsRequest.Resolver.Port))
+	// if UseSystemDefaults if false
+	if !dnsRequest.Resolver.UseSystemDefaults {
+		// Resolver.IP has to be a valid IP
+		if net.ParseIP(dnsRequest.Resolver.IP) == nil {
+			validateErrs = append(validateErrs, fmt.Errorf("resolver IP is not a valid IP address: %s", dnsRequest.Resolver.IP))
+		}
+
+		// Resolver.Port has to be a valid Port
+		if dnsRequest.Resolver.Port < 1 || dnsRequest.Resolver.Port > 65535 {
+			validateErrs = append(validateErrs, fmt.Errorf("resolver port is not a valid port number: %d", dnsRequest.Resolver.Port))
+		}
 	}
 
 	if len(validateErrs) > 0 {
 		return validateErrs
 	}
 
-	// Otherwise, return nil for success.
 	return nil
 }

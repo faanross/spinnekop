@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"github.com/faanross/spinnekop/internal/models"
 	"github.com/faanross/spinnekop/internal/validate"
@@ -34,12 +35,19 @@ func main() {
 	// fmt.Printf("%+v\n", dnsRequest)
 
 	// (3) Validate request fields
-	var errs []error
 
-	errs = validate.ValidateRequest(&dnsRequest)
-
-	for _, err := range errs {
-
+	if err := validate.ValidateRequest(&dnsRequest); err != nil {
+		// Use a type assertion to check if it's the specific type we're looking for.
+		var validationErrs validate.ValidationErrors
+		if errors.As(err, &validationErrs) {
+			fmt.Println("Configuration is invalid. Errors:")
+			for _, validationErr := range validationErrs {
+				fmt.Printf("  - %s\n", validationErr)
+			}
+		}
+		return
 	}
+
+	fmt.Println("✅ DNS request configuration is valid!")
 
 }
