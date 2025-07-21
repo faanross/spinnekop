@@ -33,14 +33,6 @@ type Header struct {
 	// RCode (4 bits): Response code. We use uint8 (0-15) to allow setting
 	// any value, including standard codes and reserved ones (11 - 15).
 	RCode uint8 `yaml:"rcode"`
-
-	// Counts (16 bits each): These fields specify the number of entries in the
-	// subsequent sections of the DNS message. For a standard query, only
-	// QuestionCount will be 1. The others will be 0.
-	QuestionCount   uint16 `yaml:"question_count"`
-	AnswerCount     uint16 `yaml:"answer_count"`
-	AuthorityCount  uint16 `yaml:"ns_count"`
-	AdditionalCount uint16 `yaml:"additional_count"`
 }
 
 // Question represents the question section of a DNS query.

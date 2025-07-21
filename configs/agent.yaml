@@ -39,19 +39,6 @@ header:
   # rcode: The 4-bit response code. Set any value from 0 to 15.
   rcode: 0
 
-  # --- Section Counts ---
-  # question_count HAS to be 1
-  question_count: 1
-
-  # answer_count HAS to be 0
-  answer_count: 0
-
-  # ns_count HAS to be 0
-  ns_count: 0
-
-  # additional_count HAS to 0 (standard) or 1 (edns)
-  additional_count: 0
-
 question:
   # name: The domain we're requesting to resolve
   # The trailing dot signifies the root of the DNS tree, making it a Fully Qualified Domain Name (FQDN).
