@@ -27,8 +27,6 @@ func main() {
 		return
 	}
 
-	// fmt.Println(string(yamlFile))
-
 	// (2) DNS request struct + unmarshall
 
 	var dnsRequest models.DNSRequest
