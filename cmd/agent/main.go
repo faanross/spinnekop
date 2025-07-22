@@ -6,7 +6,7 @@ import (
 	"github.com/faanross/spinnekop/internal/crafter"
 	"github.com/faanross/spinnekop/internal/models"
 	"github.com/faanross/spinnekop/internal/validate"
-	"github.com/miekg/dns"
+	"github.com/faanross/spinnekop/internal/visualizer"
 	"gopkg.in/yaml.v3"
 	"os"
 )
@@ -49,7 +49,7 @@ func main() {
 		}
 		return
 	} else {
-		fmt.Println("✅ DNS request configuration is valid!")
+		fmt.Printf("✅ DNS request configuration is valid!\n\n")
 	}
 
 	dnsMsg, err := crafter.BuildDNSRequest(dnsRequest)
@@ -72,19 +72,7 @@ func main() {
 		return
 	}
 
-	// (6) Print results and visualize final packet
-	// We unpack it back into dns.Msg structure
-	var finalMsg dns.Msg
-	err = finalMsg.Unpack(packedMsg)
-	if err != nil {
-		fmt.Printf("Error unpacking modified message: %v\n", err)
-		return
-	}
-
-	// The library's String() method won't show the Z flag, but this confirms the packet is valid.
-	fmt.Println("\n--- Final DNS Message (After Override) ---")
-	fmt.Println(finalMsg.String())
-	fmt.Printf("NOTE: Z flag was set to %d in the raw packet bytes.\n", dnsRequest.Header.Z)
-	fmt.Println("------------------------------------------")
+	// (6) Visualize our packet to terminal
+	visualizer.VisualizePacket(packedMsg)
 
 }

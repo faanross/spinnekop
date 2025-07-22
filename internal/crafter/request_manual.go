@@ -37,7 +37,7 @@ func ApplyManualOverride(packedMsg []byte, header models.Header) error {
 	// --- Write the modified flags back into the byte slice ---
 	binary.BigEndian.PutUint16(packedMsg[2:4], flags)
 
-	fmt.Printf("\n>>> Manually set Z flag to %d. New flags value: 0x%04X\n", header.Z, flags)
+	//fmt.Printf("\n>>> Manually set Z flag to %d. New flags value: 0x%04X\n", header.Z, flags)
 
 	return nil
 }
