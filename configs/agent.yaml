@@ -34,7 +34,7 @@ header:
   recursion_available: false
 
   # z: The 3 reserved bits, "must" be 0, but spinnekop allows for any value 0 - 7
-  z: 6
+  z: 3
 
   # rcode: The 4-bit response code. Set any value from 0 to 15.
   rcode: 0

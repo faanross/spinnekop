@@ -6,6 +6,7 @@ import (
 	"github.com/faanross/spinnekop/internal/crafter"
 	"github.com/faanross/spinnekop/internal/models"
 	"github.com/faanross/spinnekop/internal/validate"
+	"github.com/miekg/dns"
 	"gopkg.in/yaml.v3"
 	"os"
 )
@@ -57,6 +58,33 @@ func main() {
 		return
 	}
 
-	// NOW WE WILL MANUALLY CRAFT Z-VALUE
+	// (4) Pack the dnsMsg to convert to byte slice
+	packedMsg, err := dnsMsg.Pack()
+	if err != nil {
+		fmt.Printf("Error packing message: %v\n", err)
+		return
+	}
+
+	// (5) Now we can apply our manual override for the Z flag
+	err = crafter.ApplyManualOverride(packedMsg, dnsRequest.Header)
+	if err != nil {
+		fmt.Printf("Error applying manual overrides: %v\n", err)
+		return
+	}
+
+	// (6) Print results and visualize final packet
+	// To prove it worked, we can unpack the modified bytes and print the message again.
+	var finalMsg dns.Msg
+	err = finalMsg.Unpack(packedMsg)
+	if err != nil {
+		fmt.Printf("Error unpacking modified message: %v\n", err)
+		return
+	}
+
+	// The library's String() method won't show the Z flag, but this confirms the packet is valid.
+	fmt.Println("\n--- Final DNS Message (After Override) ---")
+	fmt.Println(finalMsg.String())
+	fmt.Printf("NOTE: Z flag was set to %d in the raw packet bytes.\n", dnsRequest.Header.Z)
+	fmt.Println("------------------------------------------")
 
 }
