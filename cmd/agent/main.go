@@ -5,8 +5,12 @@ import (
 	"fmt"
 	"github.com/faanross/spinnekop/internal/crafter"
 	"github.com/faanross/spinnekop/internal/models"
+	"github.com/faanross/spinnekop/internal/network"
+	"github.com/faanross/spinnekop/internal/utils"
 	"github.com/faanross/spinnekop/internal/validate"
 	"github.com/faanross/spinnekop/internal/visualizer"
+	"github.com/fatih/color"
+	"github.com/miekg/dns"
 	"gopkg.in/yaml.v3"
 	"os"
 )
@@ -74,5 +78,37 @@ func main() {
 
 	// (6) Visualize our packet to terminal
 	visualizer.VisualizePacket(packedMsg)
+
+	// (7) Determine the final resolver to use based on the YAML config.
+	finalResolver, err := utils.DetermineResolver(dnsRequest.Resolver)
+	if err != nil {
+		fmt.Printf("Error determining resolver: %v\n", err)
+		return
+	}
+
+	// (8) Send Packet and Receive Response
+	responseBytes, err := network.SendAndReceivePacket(packedMsg, finalResolver)
+	if err != nil {
+		fmt.Printf("\nError during network communication: %v\n", err)
+		return
+	}
+
+	// (9) Process and Display the Response
+
+	color.Green("\n--- DNS Server Response ---")
+	var responseMsg dns.Msg
+	err = responseMsg.Unpack(responseBytes)
+	if err != nil {
+		fmt.Printf("Error unpacking response packet: %v\n", err)
+		// Even if unpacking fails, visualize raw bytes
+		visualizer.VisualizePacket(responseBytes)
+		return
+	}
+
+	// (10) Print the parsed, human-readable response.
+	fmt.Println(responseMsg.String())
+
+	// (11) And visualize the raw response packet.
+	visualizer.VisualizePacket(responseBytes)
 
 }

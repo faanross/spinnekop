@@ -14,7 +14,7 @@ const (
 // VisualizePacket prints a DNS packet in a user-friendly hex and ASCII format.
 func VisualizePacket(packet []byte) {
 
-	color.Cyan("------------------>>> DNS REQUEST PACKET VISUALIZATION <<<------------------")
+	color.Cyan("---------------------->>> DNS PACKET VISUALIZATION <<<----------------------")
 
 	if len(packet) == 0 {
 		color.Red("ERROR: Empty packet")

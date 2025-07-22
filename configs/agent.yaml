@@ -2,13 +2,13 @@ resolver:
   # use_system_defaults: If true, the application will automatically find and use
   # your computer's default DNS resolver, ignoring the ip and port fields below.
   # If false, it will use the manually specified ip and port.
-  use_system_defaults: false
+  use_system_defaults: true
 
   # ip: The IP address of the DNS resolver to send this packet to.
-  ip: "127.0.0.1"
+  ip: "1.1.1.1"
 
   # port: The standard port for DNS queries.
-  port: 66
+  port: 53
 
 header:
   # id: A 16-bit identifier, either set custom value here, or
