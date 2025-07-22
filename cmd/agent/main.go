@@ -73,7 +73,7 @@ func main() {
 	}
 
 	// (6) Print results and visualize final packet
-	// To prove it worked, we can unpack the modified bytes and print the message again.
+	// We unpack it back into dns.Msg structure
 	var finalMsg dns.Msg
 	err = finalMsg.Unpack(packedMsg)
 	if err != nil {
