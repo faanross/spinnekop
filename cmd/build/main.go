@@ -6,9 +6,9 @@ package main
 
 const (
 	// Paths relative to the project root
-	yamlConfigSourcePath   = "./configs/agent.yaml"  // Agent's YAML config
-	embeddedGoConfigTarget = "./cmd/agent/config.go" // Output path for generated Go config
-	agentMainPackagePath   = "./cmd/agent"           // Path to agent's main package for compilation
-	defaultOutputDir       = "./bin"                 // Default output directory for binaries
-	defaultBinaryNameBase  = "spinnekop_Agent"       // Naming convention for compiled agent
+	yamlConfigSourcePath   = "./configs/request.yaml" // Agent's YAML config
+	embeddedGoConfigTarget = "./cmd/agent/config.go"  // Output path for generated Go config
+	agentMainPackagePath   = "./cmd/agent"            // Path to agent's main package for compilation
+	defaultOutputDir       = "./bin"                  // Default output directory for binaries
+	defaultBinaryNameBase  = "spinnekop_Agent"        // Naming convention for compiled agent
 )

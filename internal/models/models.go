@@ -7,6 +7,7 @@ type DNSRequest struct {
 	Header   Header   `yaml:"header"`
 	Question Question `yaml:"question"`
 	Resolver Resolver `yaml:"resolver"`
+	Answers  []Answer `yaml:"answers,omitempty"`
 }
 
 // Header represents the DNS header section.
@@ -56,4 +57,13 @@ type Resolver struct {
 	// if UseSystemDefaults is false we can manually set the server/resolver here
 	IP   string `yaml:"ip"`
 	Port int    `yaml:"port"`
+}
+
+// Answer represents a DNS answer record
+type Answer struct {
+	Name  string `yaml:"name"`
+	Type  string `yaml:"type"`
+	Class string `yaml:"class"`
+	TTL   uint32 `yaml:"ttl"`
+	Data  string `yaml:"data"` // For TXT records, this will be the text content
 }

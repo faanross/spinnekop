@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"flag"
 	"fmt"
 	"github.com/faanross/spinnekop/internal/crafter"
 	"github.com/faanross/spinnekop/internal/models"
@@ -16,9 +17,16 @@ import (
 )
 
 // assume go run from root, otherwise change path
-var pathToYamlFile = "./configs/agent.yaml"
+var defaultYamlFile = "./configs/request.yaml"
 
 func main() {
+
+	// (0) parse flag to indicate specific config
+	var pathToYamlFile string
+
+	// if no value provided use defaultYamlFile
+	flag.StringVar(&pathToYamlFile, "config", defaultYamlFile, "Path to YAML config file")
+	flag.Parse()
 
 	// (1) read yaml-file from disk
 	yamlFile, err := os.ReadFile(pathToYamlFile)
@@ -35,8 +43,6 @@ func main() {
 		fmt.Printf("Error unmarshalling YAML file: %v\n", err)
 		return
 	}
-
-	// fmt.Printf("%+v\n", dnsRequest)
 
 	// (3) Validate request fields
 

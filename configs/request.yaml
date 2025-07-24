@@ -2,7 +2,7 @@ resolver:
   # use_system_defaults: If true, the application will automatically find and use
   # your computer's default DNS resolver, ignoring the ip and port fields below.
   # If false, it will use the manually specified ip and port.
-  use_system_defaults: true
+  use_system_defaults: false
 
   # ip: The IP address of the DNS resolver to send this packet to.
   ip: "1.1.1.1"
@@ -34,7 +34,7 @@ header:
   recursion_available: false
 
   # z: The 3 reserved bits, "must" be 0, but spinnekop allows for any value 0 - 7
-  z: 3
+  z: 6
 
   # rcode: The 4-bit response code. Set any value from 0 to 15.
   rcode: 0
