@@ -18,6 +18,8 @@ question:
   name: "data.malicious.com."
   type: "TXT"
   class: "NO"
+  std_class: false
+  custom_class: 67
 
 answers:
   - name: "data.malicious.com."

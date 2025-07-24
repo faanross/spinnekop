@@ -49,14 +49,16 @@ func ValidateRequest(dnsRequest *models.DNSRequest) error {
 		validateErrs = append(validateErrs, fmt.Errorf("invalid question type: %s", dnsRequest.Question.Type))
 	}
 
-	// make sure Question.Class appears in our QClassMap
-	if _, ok := models.QClassMap[dnsRequest.Question.Class]; !ok {
-		validateErrs = append(validateErrs, fmt.Errorf("invalid question class: %s", dnsRequest.Question.Class))
+	// Validate Question.Class based on StdClass flag
+	if dnsRequest.Question.StdClass {
+		// Standard class mode - check if it's in our map
+		if _, ok := models.QClassMap[dnsRequest.Question.Class]; !ok {
+			validateErrs = append(validateErrs, fmt.Errorf("invalid standard question class: %s", dnsRequest.Question.Class))
+		}
 	}
-
 	// RESOLVER SECTION VALIDATION
 
-	// if UseSystemDefaults if false
+	// if UseSystemDefaults when false
 	if !dnsRequest.Resolver.UseSystemDefaults {
 		// Resolver.IP has to be a valid IP
 		if net.ParseIP(dnsRequest.Resolver.IP) == nil {

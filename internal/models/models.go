@@ -48,6 +48,12 @@ type Question struct {
 
 	// Class: The protocol class, almost always "IN" for internet.
 	Class string `yaml:"class"`
+
+	// StdClass: If true, use standard class names (IN, CS, etc). If false, use custom class value
+	StdClass bool `yaml:"std_class"`
+
+	// CustomClass: When StdClass is false, this uint16 value is used directly
+	CustomClass uint16 `yaml:"custom_class,omitempty"`
 }
 
 // Resolver holds the information about the DNS resolver we're sending the packet to.

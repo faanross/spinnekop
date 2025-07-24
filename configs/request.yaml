@@ -49,3 +49,7 @@ question:
 
   # class: The class of the query. For internet addresses, this is always "IN".
   class: "IN"
+
+  std_class: false
+
+  custom_class: 67

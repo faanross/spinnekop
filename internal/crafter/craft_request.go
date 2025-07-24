@@ -38,9 +38,18 @@ func BuildDNSRequest(req models.DNSRequest) (*dns.Msg, error) {
 		return nil, fmt.Errorf("invalid question type: %s", req.Question.Type)
 	}
 
-	qClass, ok := models.QClassMap[req.Question.Class]
-	if !ok {
-		return nil, fmt.Errorf("invalid question class: %s", req.Question.Class)
+	// special condition for qClass since we allow for standard and non-standard values
+	var qClass uint16
+	if req.Question.StdClass {
+		// Standard class mode - look up in map
+		var ok bool
+		qClass, ok = models.QClassMap[req.Question.Class]
+		if !ok {
+			return nil, fmt.Errorf("invalid question class: %s", req.Question.Class)
+		}
+	} else {
+		// Custom class mode - use the raw value
+		qClass = req.Question.CustomClass
 	}
 
 	// For all the remaining fields we can directly use the struct field values
@@ -86,6 +95,6 @@ func BuildDNSRequest(req models.DNSRequest) (*dns.Msg, error) {
 			}
 		}
 	}
-	
+
 	return msg, nil
 }
