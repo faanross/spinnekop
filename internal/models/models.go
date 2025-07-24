@@ -1,5 +1,7 @@
 package models
 
+import "github.com/miekg/dns"
+
 // DNSRequest will hold the complete agent-side
 // configuration parsed from configs/request.yaml
 // It embeds 3 other structs, defined below
@@ -66,4 +68,23 @@ type Answer struct {
 	Class string `yaml:"class"`
 	TTL   uint32 `yaml:"ttl"`
 	Data  string `yaml:"data"` // For TXT records, this will be the text content
+}
+
+// RDATAAnalysis is for info related to TXT response RDATA analysis
+type RDATAAnalysis struct {
+	HexDetected    bool
+	Base64Detected bool
+	Capacity       float64
+}
+
+// DNSPacket is used for analyzer's initial classification of dns packets in pcap
+type DNSPacket struct {
+	SrcIP         string
+	DstIP         string
+	Type          string // "Request" or "Response"
+	RawData       []byte
+	Msg           *dns.Msg // Parsed miekg msg object
+	ZValue        uint8
+	RecordType    string // DNS record type (A, MX, CNAME, etc.)
+	RDATAAnalysis *RDATAAnalysis
 }
