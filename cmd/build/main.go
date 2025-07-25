@@ -5,9 +5,11 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"github.com/faanross/spinnekop/internal/models"
+	"github.com/faanross/spinnekop/internal/validate"
 	"gopkg.in/yaml.v3"
 	"log"
 	"os"
@@ -113,6 +115,20 @@ func generateEmbeddedConfig() error {
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal YAML from '%s': %w", yamlConfigSourcePath, err)
 	}
+
+	// Validate configuration values at compile time
+	if err := validate.ValidateRequest(&cfgFromYAML); err != nil {
+		// Use type assertion to check for ValidationErrors
+		var validationErrs validate.ValidationErrors
+		if errors.As(err, &validationErrs) {
+			log.Println("Build Error: Configuration is invalid:")
+			for _, validationErr := range validationErrs {
+				log.Printf("  - %s", validationErr)
+			}
+		}
+		return fmt.Errorf("configuration validation failed: %w", err)
+	}
+	log.Println("Build: Configuration validated successfully")
 
 	// Create new template based on configGoTemplate we defined at the top
 	tmpl, err := template.New("config").Parse(configGoTemplate)

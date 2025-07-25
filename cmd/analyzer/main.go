@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"github.com/faanross/spinnekop/internal/models"
-	"github.com/faanross/spinnekop/internal/utils"
+	"github.com/faanross/spinnekop/internal/pcap"
 	"github.com/nsf/termbox-go"
 	"log"
 )
@@ -34,7 +34,7 @@ func main() {
 	}
 
 	// pcap has been located, extract DNS packets
-	packets, err := utils.ExtractDNSPackets(pcapFile)
+	packets, err := pcap.ExtractDNSPackets(pcapFile)
 	if err != nil {
 		log.Fatal(err)
 	}
