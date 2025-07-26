@@ -1,0 +1,217 @@
+# -----------------------------------------------------------------------------
+# Server Settings
+# -----------------------------------------------------------------------------
+
+server:
+
+  bind_address: "0.0.0.0"
+  port: 53
+
+  max_workers: 4 # Number of concurrent goroutines processing queries
+
+  read_timeout: 5 # How long to wait for incoming packets (seconds)
+
+  write_timeout: 5 # How long to wait when sending responses (seconds)
+
+  max_packet_size: 512 # Maximum UDP packet size to accept
+
+# -----------------------------------------------------------------------------
+# Logging Configuration
+# -----------------------------------------------------------------------------
+
+logging:
+  level: "INFO" # Controls verbosity (DEBUG, INFO, WARN, ERROR)
+
+  format: "TEXT" # How to format log messages (TEXT, JSON)
+
+  output: "STDOUT" # Where to write logs (STDOUT, STDERR, file path)
+
+  log_queries: true # Log every DNS query received?
+
+  log_responses: true # Log every DNS response sent?
+
+  packet_dump: false # Include hex dumps of packets in logs?
+  # Only enable for debugging - creates very verbose logs
+
+# -----------------------------------------------------------------------------
+# Zone Configuration
+# This defines the DNS zones (domains) the server is authoritative for
+# -----------------------------------------------------------------------------
+
+zones:
+  - name: "timeserversync.com."  # Note the trailing dot
+
+    # Zone metadata
+    description: "Primary zone for Time Server Sync"
+    ttl: 300  # Default TTL for records (seconds)
+
+    soa: # Start of Authority record
+      primary: "ns1.timeserversync.com." # Primary name server for this zone
+
+      admin: "admin.timeserversync.com." # Email of zone administrator (@ becomes .)
+
+      serial: 2024012001 # Zone version number (increment when making changes)
+      # YYYYMMDDNN (year/month/day/sequence)
+
+      refresh: 3600 # How often secondary servers should check for updates (seconds)
+
+      retry: 1800 # How long to wait before retrying failed zone transfer (seconds)
+
+      expire: 604800 # How long secondary servers should keep data without updates (seconds)
+
+      minimum: 86400 # Minimum TTL for negative caching (seconds)
+
+    # Name Server records - define authoritative servers for this zone
+    nameservers:
+      - name: "ns1.timeserversync.com."
+        ip: "64.23.212.29"  # Server's IP
+      - name: "ns2.timeserversync.com."
+        ip: "64.23.195.234"  # Backup server
+
+    # A records - map names to IPv4 addresses
+    a_records:
+      # Root domain
+      - name: "timeserversync.com."
+        ip: "203.0.113.42"
+        ttl: 300
+
+      # www subdomain
+      - name: "www.timeserversync.com."
+        ip: "203.0.113.42"
+        ttl: 300
+
+      # API endpoint
+      - name: "api.timeserversync.com."
+        ip: "203.0.113.43"
+        ttl: 300
+
+      # Name servers (A records for the NS records above)
+      - name: "ns1.timeserversync.com."
+        ip: "203.0.113.10"
+        ttl: 3600  # Longer TTL for infrastructure
+
+      - name: "ns2.timeserversync.com."
+        ip: "203.0.113.11"
+        ttl: 3600
+
+    # AAAA records - map names to IPv6 addresses (optional)
+    aaaa_records:
+      - name: "timeserversync.com."
+        ip: "2001:db8::42"
+        ttl: 300
+
+      - name: "www.timeserversync.com."
+        ip: "2001:db8::42"
+        ttl: 300
+
+    # CNAME records - aliases pointing to other names
+    cname_records:
+      - name: "mail.timeserversync.com."
+        target: "timeserversync.com."
+        ttl: 300
+
+      - name: "ftp.timeserversync.com."
+        target: "timeserversync.com."
+        ttl: 300
+
+    # MX records - mail exchange servers
+    mx_records:
+      - name: "timeserversync.com."
+        priority: 10
+        target: "mail.timeserversync.com."
+        ttl: 300
+
+      - name: "timeserversync.com."
+        priority: 20
+        target: "backup-mail.timeserversync.com."
+        ttl: 300
+
+    # TXT records - arbitrary text data
+    txt_records:
+      - name: "timeserversync.com."
+        text: "v=spf1 include:_spf.google.com ~all"
+        ttl: 300
+
+      - name: "_dmarc.timeserversync.com."
+        text: "v=DMARC1; p=quarantine; rua=mailto:dmarc@timeserversync.com"
+        ttl: 300
+
+# -----------------------------------------------------------------------------
+# Security Settings
+# -----------------------------------------------------------------------------
+security:
+  # rate_limiting: Prevent abuse by limiting queries per IP
+  rate_limiting:
+    enabled: true
+    max_queries_per_second: 10
+    max_queries_per_minute: 100
+    blacklist_duration: 300  # seconds to blacklist abusive IPs
+
+  # query_filtering: Block or allow specific query types
+  query_filtering:
+    # allowed_types: Only respond to these query types
+    # Empty list means allow all types
+    allowed_types: ["A", "AAAA", "CNAME", "MX", "TXT", "NS", "SOA"]
+
+    # blocked_ips: IPs to never respond to
+    blocked_ips: []
+
+    # allowed_ips: If not empty, only respond to these IPs
+    allowed_ips: []
+
+  # response_policies: How to handle edge cases
+  response_policies:
+    # refuse_recursion: Always refuse recursive queries
+    refuse_recursion: true
+
+    # case_sensitive: Whether domain names are case sensitive
+    # DNS spec says no, but you can test non-standard behavior
+    case_sensitive: false
+
+    # minimum_ttl: Never return TTL lower than this
+    minimum_ttl: 60
+
+    # maximum_ttl: Never return TTL higher than this
+    maximum_ttl: 86400
+
+# -----------------------------------------------------------------------------
+# Monitoring and Health Checks
+# -----------------------------------------------------------------------------
+monitoring:
+  # metrics: Enable metrics collection
+  metrics:
+    enabled: true
+    bind_address: "127.0.0.1"
+    port: 8080
+    path: "/metrics"
+
+  # health_check: Simple health check endpoint
+  health_check:
+    enabled: true
+    bind_address: "127.0.0.1"
+    port: 8081
+    path: "/health"
+
+  # statistics: Track query statistics
+  statistics:
+    enabled: true
+    reset_interval: 3600  # Reset counters every hour
+
+# -----------------------------------------------------------------------------
+# Development and Testing Settings
+# -----------------------------------------------------------------------------
+development:
+  # enable_debug_endpoints: Expose debugging endpoints
+  # WARNING: Never enable in production!
+  enable_debug_endpoints: false
+
+  # simulate_failures: Randomly fail requests for testing
+  simulate_failures:
+    enabled: false
+    failure_rate: 0.01  # 1% of requests fail
+
+  # packet_capture: Save all packets to files for analysis
+  packet_capture:
+    enabled: false
+    directory: "./packet_captures"
+    max_files: 1000

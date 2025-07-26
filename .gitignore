@@ -31,3 +31,7 @@ Icon
 ._*
 .Spotlight-V100
 .Trashes
+
+
+# server config
+./configs/server.yaml
