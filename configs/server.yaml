@@ -68,33 +68,30 @@ zones:
       - name: "ns2.timeserversync.com."
         ip: "64.23.195.234"  # Backup server
 
-    # A records - map names to IPv4 addresses
+    # A records
     a_records:
-      # Root domain
       - name: "timeserversync.com."
         ip: "203.0.113.42"
         ttl: 300
 
-      # www subdomain
       - name: "www.timeserversync.com."
         ip: "203.0.113.42"
         ttl: 300
 
-      # API endpoint
       - name: "api.timeserversync.com."
         ip: "203.0.113.43"
         ttl: 300
 
-      # Name servers (A records for the NS records above)
+      # Name servers
       - name: "ns1.timeserversync.com."
         ip: "203.0.113.10"
-        ttl: 3600  # Longer TTL for infrastructure
+        ttl: 3600
 
       - name: "ns2.timeserversync.com."
         ip: "203.0.113.11"
         ttl: 3600
 
-    # AAAA records - map names to IPv6 addresses (optional)
+    # AAAA records
     aaaa_records:
       - name: "timeserversync.com."
         ip: "2001:db8::42"
@@ -104,7 +101,7 @@ zones:
         ip: "2001:db8::42"
         ttl: 300
 
-    # CNAME records - aliases pointing to other names
+    # CNAME records
     cname_records:
       - name: "mail.timeserversync.com."
         target: "timeserversync.com."
@@ -114,7 +111,7 @@ zones:
         target: "timeserversync.com."
         ttl: 300
 
-    # MX records - mail exchange servers
+    # MX records
     mx_records:
       - name: "timeserversync.com."
         priority: 10
@@ -126,7 +123,7 @@ zones:
         target: "backup-mail.timeserversync.com."
         ttl: 300
 
-    # TXT records - arbitrary text data
+    # TXT records
     txt_records:
       - name: "timeserversync.com."
         text: "v=spf1 include:_spf.google.com ~all"
@@ -140,60 +137,47 @@ zones:
 # Security Settings
 # -----------------------------------------------------------------------------
 security:
-  # rate_limiting: Prevent abuse by limiting queries per IP
-  rate_limiting:
+  rate_limiting: # Prevent abuse by limiting queries per IP
     enabled: true
     max_queries_per_second: 10
     max_queries_per_minute: 100
-    blacklist_duration: 300  # seconds to blacklist abusive IPs
+    blacklist_duration: 3000
 
-  # query_filtering: Block or allow specific query types
-  query_filtering:
-    # allowed_types: Only respond to these query types
+  query_filtering: # Block or allow specific query types
+    allowed_types: ["A", "AAAA", "CNAME", "MX", "TXT", "NS", "SOA"] # Only respond to these query types
     # Empty list means allow all types
-    allowed_types: ["A", "AAAA", "CNAME", "MX", "TXT", "NS", "SOA"]
 
-    # blocked_ips: IPs to never respond to
-    blocked_ips: []
+    blocked_ips: [] # IPs to never respond to
 
-    # allowed_ips: If not empty, only respond to these IPs
-    allowed_ips: []
+    allowed_ips: [] # If not empty, only respond to these IPs
 
   # response_policies: How to handle edge cases
   response_policies:
-    # refuse_recursion: Always refuse recursive queries
-    refuse_recursion: true
+    refuse_recursion: true # Always refuse recursive queries
 
-    # case_sensitive: Whether domain names are case sensitive
-    # DNS spec says no, but you can test non-standard behavior
-    case_sensitive: false
+    case_sensitive: false # Whether domain names are case sensitive
 
-    # minimum_ttl: Never return TTL lower than this
-    minimum_ttl: 60
+    minimum_ttl: 60 # Never return TTL lower than this
 
-    # maximum_ttl: Never return TTL higher than this
-    maximum_ttl: 86400
+    maximum_ttl: 86400 # Never return TTL higher than this
 
 # -----------------------------------------------------------------------------
 # Monitoring and Health Checks
 # -----------------------------------------------------------------------------
 monitoring:
-  # metrics: Enable metrics collection
-  metrics:
+  metrics: # Enable metrics collection
     enabled: true
     bind_address: "127.0.0.1"
     port: 8080
     path: "/metrics"
 
-  # health_check: Simple health check endpoint
-  health_check:
+  health_check: # Simple health check endpoint
     enabled: true
     bind_address: "127.0.0.1"
     port: 8081
     path: "/health"
 
-  # statistics: Track query statistics
-  statistics:
+  statistics: # Track query statistics
     enabled: true
     reset_interval: 3600  # Reset counters every hour
 
@@ -201,17 +185,14 @@ monitoring:
 # Development and Testing Settings
 # -----------------------------------------------------------------------------
 development:
-  # enable_debug_endpoints: Expose debugging endpoints
   # WARNING: Never enable in production!
-  enable_debug_endpoints: false
+  enable_debug_endpoints: false # Expose debugging endpoints
 
-  # simulate_failures: Randomly fail requests for testing
-  simulate_failures:
+  simulate_failures: # Randomly fail requests for testing
     enabled: false
     failure_rate: 0.01  # 1% of requests fail
 
-  # packet_capture: Save all packets to files for analysis
-  packet_capture:
+  packet_capture: # Save all packets to files for analysis
     enabled: false
     directory: "./packet_captures"
     max_files: 1000
