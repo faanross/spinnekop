@@ -3,10 +3,13 @@ package main
 import (
 	"fmt"
 	"github.com/faanross/spinnekop/internal/logging"
+	"github.com/faanross/spinnekop/internal/server"
 	"os"
 )
 
+// for now just hardcode perhaps implement flags later tbd
 var configPath = "./configs/server.yaml"
+var currentVersion = "0.1"
 
 func main() {
 
@@ -21,23 +24,17 @@ func main() {
 		os.Exit(1)
 	}
 
-	// print loaded config
-
 	// create our global logger
 	err = logging.Initialize(config.Logging)
 	if err != nil {
 		fmt.Printf("Failed to initialize logging: %v\n", err)
 	}
+
 	printStartUpInfo(configPath, config)
+	performZoneConsistencyChecks(loader)
 
-	// TODO REFORMAT USING LOGGER
+	// create our dns server
 
-	// perform zone consistency checks
-	if err := loader.ValidateZoneConsistency(); err != nil {
-		fmt.Printf("Zone consistency check failed: %v\n", err)
-		return
-	}
-
-	fmt.Println("\nConfiguration loaded and validated successfully!")
+	dnsServer, err := server.NewDNSServer(config)
 
 }

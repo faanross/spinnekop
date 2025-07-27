@@ -12,12 +12,13 @@ type Config struct {
 
 // ServerConfig controls the core server behavior
 type ServerConfig struct {
-	BindAddress   string `yaml:"bind_address"`
-	Port          int    `yaml:"port"`
-	MaxWorkers    int    `yaml:"max_workers"`
-	ReadTimeout   int    `yaml:"read_timeout"`  // seconds
-	WriteTimeout  int    `yaml:"write_timeout"` // seconds
-	MaxPacketSize int    `yaml:"max_packet_size"`
+	BindAddress             string `yaml:"bind_address"`
+	Port                    int    `yaml:"port"`
+	MaxWorkers              int    `yaml:"max_workers"`
+	WorkerChannelBufferSize int    `yaml:"worker_channel_buffer_size"` // worker channel buffer size
+	ReadTimeout             int    `yaml:"read_timeout"`               // seconds
+	WriteTimeout            int    `yaml:"write_timeout"`              // seconds
+	MaxPacketSize           int    `yaml:"max_packet_size"`
 }
 
 // LoggingConfig controls how the server logs information

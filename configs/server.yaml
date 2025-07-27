@@ -9,6 +9,8 @@ server:
 
   max_workers: 4 # Number of concurrent goroutines processing queries
 
+  worker_channel_buffer_size: 10 # channel buffer size for each worker performing query lookups
+
   read_timeout: 5 # How long to wait for incoming packets (seconds)
 
   write_timeout: 5 # How long to wait when sending responses (seconds)
@@ -64,9 +66,9 @@ zones:
     # Name Server records - define authoritative servers for this zone
     nameservers:
       - name: "ns1.timeserversync.com."
-        ip: "64.23.212.29"  # Server's IP
+        ip: "203.0.113.10"  # Server's IP
       - name: "ns2.timeserversync.com."
-        ip: "64.23.195.234"  # Backup server
+        ip: "203.0.113.11"  # Backup server
 
     # A records
     a_records:

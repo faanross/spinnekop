@@ -13,7 +13,7 @@ func printStartUpInfo(configPath string, config *srv_models.Config) {
 	fmt.Printf("=====================================\n\n")
 
 	logging.Info("Application Loaded",
-		"version", "1.0.0",
+		"version", currentVersion,
 		"config_path", configPath,
 		"pid", os.Getpid())
 
@@ -26,22 +26,32 @@ func printStartUpInfo(configPath string, config *srv_models.Config) {
 		"server address", fmt.Sprintf("%s:%d", config.Server.BindAddress, config.Server.Port),
 		"total zones", len(config.Zones),
 		"workers", config.Server.MaxWorkers,
+		"worker_channel_buffer_size", config.Server.WorkerChannelBufferSize,
 		"packet size limit", config.Server.MaxWorkers,
 		"read timeout", config.Server.ReadTimeout,
 		"write timeout", config.Server.WriteTimeout,
 	)
 
-	for i, zone := range config.Zones {
+	zoneLogger := logging.WithComponent("zone_loader")
 
-		logging.Debug("Configured Zone Info",
-			"#", i,
-			"name", zone.Name,
+	for _, zone := range config.Zones {
+		recordCount := len(zone.ARecords) + len(zone.AAAARecords) +
+			len(zone.CNAMERecords) + len(zone.MXRecords) + len(zone.TXTRecords)
+
+		zoneLogger.Info("Zone loaded",
+			"zone", zone.Name,
 			"description", zone.Description,
-			"a records", len(zone.ARecords),
-			"aaaa records", len(zone.AAAARecords),
-			"cname records", len(zone.CNAMERecords),
-			"mx records", len(zone.MXRecords),
-		)
+			"total_records", recordCount,
+			"ttl", zone.TTL)
+
+		// Debug level for detailed info
+		zoneLogger.Debug("Zone record breakdown",
+			"zone", zone.Name,
+			"a_records", len(zone.ARecords),
+			"aaaa_records", len(zone.AAAARecords),
+			"cname_records", len(zone.CNAMERecords),
+			"mx_records", len(zone.MXRecords),
+			"txt_records", len(zone.TXTRecords))
 	}
 
 	logging.Debug("Security Settings",

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/faanross/spinnekop/internal/logging"
 	"github.com/faanross/spinnekop/internal/models/srv_models"
 	"gopkg.in/yaml.v3"
 	"os"
@@ -222,7 +223,7 @@ func (cl *ConfigLoader) isValidMXTarget(target string, zone *srv_models.ZoneConf
 		}
 	}
 
-	// Check if target exists as an quad-A record in this zone
+	// Check if target exists as quad-A record in this zone
 	for _, aaaaRecord := range zone.AAAARecords {
 		if aaaaRecord.Name == target {
 			return true
@@ -238,4 +239,15 @@ func (cl *ConfigLoader) isValidMXTarget(target string, zone *srv_models.ZoneConf
 
 	// If it's a FQDN pointing outside our zone, assume it's valid
 	return false
+}
+
+func performZoneConsistencyChecks(loader *ConfigLoader) {
+	// perform zone consistency checks
+	logging.Info("Performing Zone Consistency Checks")
+	if err := loader.ValidateZoneConsistency(); err != nil {
+		logging.Error("Zone consistency check failed",
+			"error", err)
+		os.Exit(1)
+	}
+	logging.Info("✅ Zone consistency checks passed")
 }
