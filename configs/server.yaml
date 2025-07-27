@@ -20,7 +20,7 @@ server:
 # -----------------------------------------------------------------------------
 
 logging:
-  level: "INFO" # Controls verbosity (DEBUG, INFO, WARN, ERROR)
+  level: "DEBUG" # Controls verbosity (DEBUG, INFO, WARN, ERROR)
 
   format: "TEXT" # How to format log messages (TEXT, JSON)
 

@@ -7,9 +7,29 @@ import (
 	"log/slog"
 	"os"
 	"strings"
+	"sync"
 )
 
-// setupLogging configures structured logging based on the configuration
+// Global logger instance
+var (
+	globalLogger *slog.Logger
+	once         sync.Once // ensures our logger is only ever created once
+	initError    error
+)
+
+// Initialize sets up our global logger
+func Initialize(config srv_models.LoggingConfig) error {
+	once.Do(func() {
+		globalLogger, initError = setupLogging(config)
+		if initError == nil {
+			// Also set as slog default so slog.Info() etc. work globally
+			slog.SetDefault(globalLogger)
+		}
+	})
+	return initError
+}
+
+// setupLogging creates and configures a logger handler based on our configuration
 func setupLogging(config srv_models.LoggingConfig) (*slog.Logger, error) {
 	// Determine log level
 	var level slog.Level
@@ -61,9 +81,5 @@ func setupLogging(config srv_models.LoggingConfig) (*slog.Logger, error) {
 
 	// Create and return the logger
 	logger := slog.New(handler)
-
-	// Set as default logger
-	slog.SetDefault(logger)
-
 	return logger, nil
 }

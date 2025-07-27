@@ -2,11 +2,14 @@ package main
 
 import (
 	"fmt"
+	"github.com/faanross/spinnekop/internal/logging"
+	"os"
 )
 
 var configPath = "./configs/server.yaml"
 
 func main() {
+
 	// instantiate ConfigLoader struct
 	loader := NewConfigLoader(configPath)
 
@@ -15,10 +18,21 @@ func main() {
 	if err != nil {
 		fmt.Printf("Failed to load configuration: %v\n", err)
 		fmt.Printf("Please create config file and save it as: %s\n", configPath)
+		os.Exit(1)
 	}
 
 	// print loaded config
-	loader.PrintConfiguration()
+
+	// create our global logger
+	err = logging.Initialize(config.Logging)
+	if err != nil {
+		fmt.Printf("Failed to initialize logging: %v\n", err)
+	}
+	printStartUpInfo(configPath, config)
+
+	// TODO REFORMAT USING LOGGER
+
+	// loader.PrintConfiguration()
 
 	// perform zone consistency checks
 	if err := loader.ValidateZoneConsistency(); err != nil {
@@ -28,21 +42,4 @@ func main() {
 
 	fmt.Println("\nConfiguration loaded and validated successfully!")
 
-	// test zone lookup functionality
-	testDomains := []string{
-		"timeserversync.com",
-		"www.timeserversync.com",
-		"api.timeserversync.com",
-		"nonexistent.example.com",
-	}
-
-	fmt.Println("\nTesting zone lookup:")
-	for _, domain := range testDomains {
-		zone := config.FindZone(domain)
-		if zone != nil {
-			fmt.Printf("  %s -> Found in zone: %s\n", domain, zone.Name)
-		} else {
-			fmt.Printf("  %s -> No authoritative zone found\n", domain)
-		}
-	}
 }
