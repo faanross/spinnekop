@@ -139,43 +139,6 @@ func (cl *ConfigLoader) applyZoneDefaults(zone *srv_models.ZoneConfig) {
 	}
 }
 
-// PrintConfiguration displays the loaded configuration in a human-readable format
-func (cl *ConfigLoader) PrintConfiguration() {
-	if cl.config == nil {
-		fmt.Println("No configuration loaded")
-		return
-	}
-
-	fmt.Println("=== DNS Server Configuration ===")
-	fmt.Printf("Server Address: %s\n", cl.config.Server.GetAddress())
-	fmt.Printf("Max Workers: %d\n", cl.config.Server.MaxWorkers)
-	fmt.Printf("Packet Size Limit: %d bytes\n", cl.config.Server.MaxPacketSize)
-
-	readTimeout, writeTimeout := cl.config.Server.GetTimeouts()
-	fmt.Printf("Timeouts: Read=%v, Write=%v\n", readTimeout, writeTimeout)
-
-	fmt.Printf("Log Level: %s\n", cl.config.Logging.Level)
-	fmt.Printf("Log Format: %s\n", cl.config.Logging.Format)
-
-	fmt.Printf("\nConfigured Zones: %d\n", len(cl.config.Zones))
-	for i, zone := range cl.config.Zones {
-		fmt.Printf("  %d. %s (%s)\n", i+1, zone.Name, zone.Description)
-		fmt.Printf("     A Records: %d, AAAA Records: %d, CNAME Records: %d\n",
-			len(zone.ARecords), len(zone.AAAARecords), len(zone.CNAMERecords))
-		fmt.Printf("     MX Records: %d, TXT Records: %d\n",
-			len(zone.MXRecords), len(zone.TXTRecords))
-	}
-
-	fmt.Printf("\nSecurity Settings:\n")
-	fmt.Printf("  Rate Limiting: %t\n", cl.config.Security.RateLimiting.Enabled)
-	fmt.Printf("  Refuse Recursion: %t\n", cl.config.Security.ResponsePolicies.RefuseRecursion)
-	fmt.Printf("  TTL Range: %d - %d seconds\n",
-		cl.config.Security.ResponsePolicies.MinimumTTL,
-		cl.config.Security.ResponsePolicies.MaximumTTL)
-
-	fmt.Println("================================")
-}
-
 // ValidateZoneConsistency performs advanced validation checks
 func (cl *ConfigLoader) ValidateZoneConsistency() error {
 	if cl.config == nil {

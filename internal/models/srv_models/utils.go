@@ -1,25 +1,12 @@
 package srv_models
 
 import (
-	"fmt"
 	"strings"
-	"time"
 )
 
 // =============================================================================
 // UTILITY METHODS
 // =============================================================================
-
-// GetTimeouts returns server timeouts as time.Duration values
-func (s *ServerConfig) GetTimeouts() (read, write time.Duration) {
-	return time.Duration(s.ReadTimeout) * time.Second,
-		time.Duration(s.WriteTimeout) * time.Second
-}
-
-// GetAddress returns the server's bind address in "host:port" format
-func (s *ServerConfig) GetAddress() string {
-	return fmt.Sprintf("%s:%d", s.BindAddress, s.Port)
-}
 
 // FindZone searches for a zone that can answer queries for the given domain
 func (c *Config) FindZone(domain string) *ZoneConfig {

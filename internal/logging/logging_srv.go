@@ -63,11 +63,16 @@ func setupLogging(config srv_models.LoggingConfig) (*slog.Logger, error) {
 		output = file
 	}
 
+	output = &prefixWriter{
+		prefix: "[*] ",
+		writer: output,
+	}
+
 	// Create appropriate handler based on format
 	var handler slog.Handler
 	handlerOptions := &slog.HandlerOptions{
 		Level:     level,
-		AddSource: level == slog.LevelDebug, // Add source info for debug level
+		AddSource: false,
 	}
 
 	switch strings.ToUpper(config.Format) {

@@ -1,6 +1,9 @@
 package logging
 
-import "log/slog"
+import (
+	"io"
+	"log/slog"
+)
 
 // CONVENIENCE METHODS
 
@@ -101,4 +104,15 @@ func getLogger() *slog.Logger {
 // IsInitialized returns true if the logger has been initialized
 func IsInitialized() bool {
 	return globalLogger != nil
+}
+
+type prefixWriter struct {
+	prefix string
+	writer io.Writer
+}
+
+func (p *prefixWriter) Write(b []byte) (int, error) {
+	// Prepend the prefix to the entire write
+	prefixed := append([]byte(p.prefix), b...)
+	return p.writer.Write(prefixed)
 }

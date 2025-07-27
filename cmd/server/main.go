@@ -32,8 +32,6 @@ func main() {
 
 	// TODO REFORMAT USING LOGGER
 
-	// loader.PrintConfiguration()
-
 	// perform zone consistency checks
 	if err := loader.ValidateZoneConsistency(); err != nil {
 		fmt.Printf("Zone consistency check failed: %v\n", err)
