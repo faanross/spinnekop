@@ -1,8 +1,10 @@
 package logging
 
 import (
+	"fmt"
 	"io"
 	"log/slog"
+	"runtime"
 )
 
 // CONVENIENCE METHODS
@@ -115,4 +117,17 @@ func (p *prefixWriter) Write(b []byte) (int, error) {
 	// Prepend the prefix to the entire write
 	prefixed := append([]byte(p.prefix), b...)
 	return p.writer.Write(prefixed)
+}
+
+// GetCallerLocation returns the file and line number of the caller.
+func GetCallerLocation() string {
+	// 0: runtime.Caller
+	// 1: getCallerLocation (this function)
+	// 2: The function that called getCallerLocation (e.g., your logging line)
+	_, file, line, ok := runtime.Caller(2)
+	if !ok {
+		return "???:0"
+	}
+	// shorten  file path if desired - using filepath.Base(file)
+	return fmt.Sprintf("%s:%d", file, line)
 }

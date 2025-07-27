@@ -1,5 +1,7 @@
 package srv_models
 
+import "fmt"
+
 // Config represents the complete DNS server configuration
 type Config struct {
 	Server      ServerConfig      `yaml:"server"`
@@ -19,6 +21,10 @@ type ServerConfig struct {
 	ReadTimeout             int    `yaml:"read_timeout"`               // seconds
 	WriteTimeout            int    `yaml:"write_timeout"`              // seconds
 	MaxPacketSize           int    `yaml:"max_packet_size"`
+}
+
+func (s *ServerConfig) GetAddress() string {
+	return fmt.Sprintf("%s:%d", s.BindAddress, s.Port)
 }
 
 // LoggingConfig controls how the server logs information
