@@ -75,9 +75,9 @@ func (p *DNSParser) isValidDomainName(name string) bool {
 
 func (p *DNSParser) isSupportedQueryType(qtype uint16) bool {
 	// Check against configured allowed types
-	if len(p.config.Security.QueryFiltering.AllowedTypes) > 0 {
+	if len(p.Config.Security.QueryFiltering.AllowedTypes) > 0 {
 		qtypeString := dns.TypeToString[qtype]
-		for _, allowed := range p.config.Security.QueryFiltering.AllowedTypes {
+		for _, allowed := range p.Config.Security.QueryFiltering.AllowedTypes {
 			if allowed == qtypeString {
 				return true
 			}

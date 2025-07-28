@@ -65,6 +65,7 @@ type QuestionAnalysis struct {
 	IsFQDN        bool
 	DomainLabels  []string
 	IsWildcard    bool
+	IsQClassInt   bool
 }
 
 // PacketAnalysis provides high-level packet analysis

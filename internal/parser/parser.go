@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"github.com/faanross/spinnekop/internal/logging"
 	"github.com/faanross/spinnekop/internal/models/srv_models"
 	"github.com/miekg/dns"
 	"time"
@@ -45,13 +46,19 @@ func (p *DNSParser) ParsePacket(rawData []byte, clientAddr string) *ParsedPacket
 	// Step 2: Analyze header (+ does basic analysis on type, "normalcy" etc.)
 	result.Header = p.analyzeHeader(msg)
 
-	// Step 3: Analyze question (if present)
+	// log header analysis
+	logAnalyzeHeader(result.Header)
+
+	// Step 3: Analyze question
 	if len(msg.Question) > 0 {
 		result.Question = p.analyzeQuestion(msg.Question[0])
+		// log question analysis
+		logAnalyzeQuestion(result.Question)
 	}
 
 	// Step 4: Perform high-level analysis
 	result.Analysis = p.analyzePacket(msg, result.Header, result.Question)
+	logAnalyzePacket(result.Analysis)
 
 	return result
 }
@@ -97,6 +104,34 @@ func (p *DNSParser) analyzeHeader(msg *dns.Msg) *HeaderAnalysis {
 	return analysis
 }
 
+func logAnalyzeHeader(header *HeaderAnalysis) {
+
+	logging.Debug("DNS Packet Header Values",
+		"id", header.ID,
+		"qr", header.QRString,
+		"opcode", header.OpcodeString,
+		"aa", header.AA,
+		"tc", header.TC,
+		"rd", header.RD,
+		"ra", header.RA,
+		"z", header.Z,
+		"rcode", header.RcodeString,
+		"question_count", header.QuestionCount,
+		"answer_count", header.AnswerCount,
+		"authority_count", header.AuthorityCount,
+		"additional_count", header.AdditionalCount,
+	)
+
+	logging.Info("DNS Packet Header Analysis",
+		"is_query", header.IsQuery,
+		"is_response", header.IsResponse,
+		"is_standard_query", header.IsStandardQuery,
+		"has_non_zero_z", header.HasNonZeroZ,
+		"is_recursion_desired", header.IsRecursionDesired,
+	)
+
+}
+
 // analyzeQuestion provides detailed question analysis
 func (p *DNSParser) analyzeQuestion(q dns.Question) *QuestionAnalysis {
 	analysis := &QuestionAnalysis{
@@ -113,7 +148,32 @@ func (p *DNSParser) analyzeQuestion(q dns.Question) *QuestionAnalysis {
 	analysis.DomainLabels = dns.SplitDomainName(analysis.Name)
 	analysis.IsWildcard = len(analysis.DomainLabels) > 0 && analysis.DomainLabels[0] == "*"
 
+	if analysis.Qclass == 1 {
+		analysis.IsQClassInt = true
+	} else {
+		analysis.IsQClassInt = false
+	}
+
 	return analysis
+}
+
+func logAnalyzeQuestion(question *QuestionAnalysis) {
+	logging.Debug("DNS Packet Question Values",
+		"name", question.Name,
+		"qtype", question.Qtype,
+		"qtype_string", question.QtypeString,
+		"qclass", question.Qclass,
+		"qclass_string", question.QclassString,
+	)
+
+	logging.Info("DNS Packet Question Analysis",
+		"is_valid_domain", question.IsValidDomain,
+		"is_fqdn", question.IsFQDN,
+		"domain_labels", question.DomainLabels,
+		"is_wild_card", question.IsWildcard,
+		"is_qclass_int", question.IsQClassInt,
+	)
+
 }
 
 // analyzePacket performs high-level packet analysis
@@ -163,7 +223,7 @@ func (p *DNSParser) analyzePacket(msg *dns.Msg, header *HeaderAnalysis, question
 
 	// Check if server supports this query
 	if question != nil {
-		zone := p.config.FindZone(question.Name)
+		zone := p.Config.FindZone(question.Name)
 		analysis.SupportedByServer = zone != nil
 
 		if !analysis.SupportedByServer {
@@ -179,4 +239,16 @@ func (p *DNSParser) analyzePacket(msg *dns.Msg, header *HeaderAnalysis, question
 	}
 
 	return analysis
+}
+
+func logAnalyzePacket(analysis *PacketAnalysis) {
+	logging.Debug("DNS High-Level Packet Analysis",
+		"packet_type", analysis.PacketType,
+		"is_well_formed", analysis.IsWellFormed,
+		"is_standard", analysis.IsStandard,
+		"had_edns", analysis.HasEdns,
+		"supported_by_server", analysis.SupportedByServer,
+		"issues", analysis.Issues,
+		"warnings", analysis.Warnings,
+	)
 }
