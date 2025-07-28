@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/faanross/spinnekop/internal/logging"
 	"github.com/faanross/spinnekop/internal/models/srv_models"
+	"github.com/faanross/spinnekop/internal/parser"
 	"net"
 	"sync"
 	"time"
@@ -187,7 +188,30 @@ func (w *worker) processRequest(request *DNSRequest) {
 		"processing_time", time.Since(startTime),
 		"packet_hex", fmt.Sprintf("%x", request.Data))
 
-	// TODO: Parse packet, process query, send response
+	// parse packet
+	dnsParser := parser.NewDNSParser(w.server.config)
+	parsed := dnsParser.ParsePacket(request.Data, request.ClientAddr.String())
+
+	// Log detailed analysis for interesting packets
+	if !parsed.Valid || len(parsed.Analysis.Issues) > 0 || len(parsed.Analysis.Warnings) > 0 {
+		logging.Warn("Packet analysis found issues",
+			"worker_id", w.id,
+			"valid", parsed.Valid,
+			"issues", parsed.Analysis.Issues,
+			"warnings", parsed.Analysis.Warnings)
+	}
+
+	// Log query details if it's a valid query
+	if parsed.Valid && parsed.Question != nil {
+		logging.Info("DNS Query details",
+			"worker_id", w.id,
+			"domain", parsed.Question.Name,
+			"type", parsed.Question.QtypeString,
+			"class", parsed.Question.QclassString,
+			"authoritative", parsed.Analysis.SupportedByServer)
+	}
+
+	// TODO  process query, send response
 
 }
 

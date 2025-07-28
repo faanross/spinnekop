@@ -5,7 +5,7 @@
 server:
 
   bind_address: "0.0.0.0"
-  port: 53
+  port: 66
 
   max_workers: 4 # Number of concurrent goroutines processing queries
 

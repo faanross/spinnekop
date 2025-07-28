@@ -5,10 +5,10 @@ resolver:
   use_system_defaults: false
 
   # ip: The IP address of the DNS resolver to send this packet to.
-  ip: "1.1.1.1"
+  ip: "127.0.0.1"
 
   # port: The standard port for DNS queries.
-  port: 53
+  port: 66
 
 header:
   # id: A 16-bit identifier, either set custom value here, or
