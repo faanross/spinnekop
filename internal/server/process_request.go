@@ -5,6 +5,8 @@ import (
 	"github.com/faanross/spinnekop/internal/logging"
 	"github.com/faanross/spinnekop/internal/parser"
 	"github.com/faanross/spinnekop/internal/visualizer"
+	"github.com/miekg/dns"
+	"net"
 	"time"
 )
 
@@ -48,6 +50,70 @@ func (w *worker) processRequest(request *DNSRequest) {
 			"authoritative", parsed.Analysis.SupportedByServer)
 	}
 
-	// TODO  process query, send response
+	// Build and send the response if the query is valid
+	if parsed.Valid && parsed.Question != nil {
+		w.buildAndSendResponse(parsed, request.ClientAddr)
+	}
 
+}
+
+// buildAndSendResponse constructs and sends a DNS response.
+func (w *worker) buildAndSendResponse(parsedRequest *parser.ParsedPacket, clientAddr *net.UDPAddr) {
+	// 1. Create a new response message based on the request.
+	responseMsg := new(dns.Msg)
+	responseMsg.SetReply(parsedRequest.Message)
+
+	// 2. Check if we are authoritative for the requested domain.
+	zone := w.server.config.FindZone(parsedRequest.Question.Name)
+	if zone != nil {
+		// We are authoritative! Set the Authoritative Answer (AA) flag.
+		responseMsg.Authoritative = true
+
+		// As per our config, refuse recursion if requested.
+		if w.server.config.Security.ResponsePolicies.RefuseRecursion {
+			responseMsg.RecursionAvailable = false
+		}
+
+		// 3. Find the corresponding records in our zone file.
+		// This is a simplified example for 'A' records.
+		switch parsedRequest.Question.Qtype {
+		case dns.TypeA:
+			for _, aRecord := range zone.ARecords {
+				if aRecord.Name == parsedRequest.Question.Name {
+					// Create a new A record from the config.
+					rr, err := dns.NewRR(fmt.Sprintf("%s %d IN A %s", aRecord.Name, aRecord.TTL, aRecord.IP))
+					if err == nil {
+						responseMsg.Answer = append(responseMsg.Answer, rr)
+					}
+				}
+			}
+			// You can add more cases here for AAAA, CNAME, MX, etc.
+		}
+
+		// 4. If we found a zone but no records, it's an NXDOMAIN (Name Error).
+		if len(responseMsg.Answer) == 0 {
+			responseMsg.Rcode = dns.RcodeNameError
+		}
+
+	} else {
+		// 5. If we're not authoritative for the domain, we refuse the query.
+		responseMsg.Rcode = dns.RcodeRefused
+	}
+
+	// 6. Pack the response message into bytes.
+	responseBytes, err := responseMsg.Pack()
+	if err != nil {
+		logging.Error("Failed to pack DNS response", "error", err)
+		return
+	}
+
+	// 7. Send the response back to the client.
+	_, err = w.server.conn.WriteToUDP(responseBytes, clientAddr)
+	if err != nil {
+		logging.Error("Failed to send DNS response", "error", err)
+	} else {
+		logging.Info("Sent DNS response",
+			"client", clientAddr.String(),
+			"rcode", dns.RcodeToString[responseMsg.Rcode])
+	}
 }
