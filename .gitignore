@@ -36,3 +36,5 @@ Icon
 # server config
 ./configs/server.yaml
 
+./timeserversync.com.zone
+
