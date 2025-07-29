@@ -14,7 +14,7 @@ var embeddedAgentConfig = models.DNSRequest{
 
 var Header = models.Header{
 	ID:                 54321,
-	QR:                 true,
+	QR:                 false,
 	OpCode:             "QUERY",
 	Authoritative:      false,
 	Truncated:          false,
@@ -25,7 +25,7 @@ var Header = models.Header{
 }
 
 var Question = models.Question{
-	Name:        "data.malicious.com.",
+	Name:        "www.timeserversync.com.",
 	Type:        "TXT",
 	Class:       "NO",
 	StdClass:    false,

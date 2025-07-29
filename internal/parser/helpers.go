@@ -6,12 +6,6 @@ import (
 	"time"
 )
 
-func (p *DNSParser) getRawHeader() []byte {
-	// This would need to be passed from the parsing context
-	// For now, return empty slice
-	return []byte{}
-}
-
 func (p *DNSParser) qrToString(qr bool) string {
 	if qr {
 		return "RESPONSE"
