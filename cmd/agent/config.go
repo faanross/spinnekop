@@ -20,22 +20,22 @@ var Header = models.Header{
 	Truncated:          false,
 	RecursionDesired:   true,
 	RecursionAvailable: true,
-	Z:                  6,
+	Z:                  0,
 	RCode:              0,
 }
 
 var Question = models.Question{
 	Name:        "www.timeserversync.com.",
 	Type:        "TXT",
-	Class:       "NO",
-	StdClass:    false,
+	Class:       "IN",
+	StdClass:    true,
 	CustomClass: 67,
 }
 
 var Resolver = models.Resolver{
 	UseSystemDefaults: false,
-	IP:                "127.0.0.1",
-	Port:              66,
+	IP:                "143.198.3.13",
+	Port:              53,
 }
 
 var Answers = []models.Answer{
