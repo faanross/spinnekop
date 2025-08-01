@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/faanross/spinnekop/internal/crafter"
 	"github.com/faanross/spinnekop/internal/network"
@@ -8,7 +9,15 @@ import (
 	"github.com/faanross/spinnekop/internal/visualizer"
 	"github.com/fatih/color"
 	"github.com/miekg/dns"
+	"math/rand"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 )
+
+var Delay = 5   // seconds
+var Jitter = 50 // percentage (0-100)
 
 func main() {
 
@@ -45,30 +54,60 @@ func main() {
 		fmt.Printf("Error determining resolver: %v\n", err)
 		return
 	}
+	// Set up signal handling
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	// Send Packet and Receive Response
-	responseBytes, err := network.SendAndReceivePacket(packedMsg, finalResolver)
-	if err != nil {
-		fmt.Printf("\nError during network communication: %v\n", err)
-		return
-	}
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
-	// Process and Display the Response
+	// Start send loop in goroutine
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				// Send Packet and Receive Response
+				responseBytes, err := network.SendAndReceivePacket(packedMsg, finalResolver)
+				if err != nil {
+					fmt.Printf("\nError during network communication: %v\n", err)
+				} else {
+					// Process and Display the Response
+					color.Green("\n--- DNS Server Response ---")
+					var responseMsg dns.Msg
+					err = responseMsg.Unpack(responseBytes)
+					if err != nil {
+						fmt.Printf("Error unpacking response packet: %v\n", err)
+						visualizer.VisualizePacket(responseBytes)
+					} else {
+						fmt.Println(responseMsg.String())
+						visualizer.VisualizePacket(responseBytes)
+					}
+				}
 
-	color.Green("\n--- DNS Server Response ---")
-	var responseMsg dns.Msg
-	err = responseMsg.Unpack(responseBytes)
-	if err != nil {
-		fmt.Printf("Error unpacking response packet: %v\n", err)
-		// Even if unpacking fails, visualize raw bytes
-		visualizer.VisualizePacket(responseBytes)
-		return
-	}
+				// Calculate sleep time with jitter
+				jitterRange := float64(Delay) * float64(Jitter) / 100.0
+				minSleep := float64(Delay) - jitterRange
+				maxSleep := float64(Delay) + jitterRange
+				sleepTime := minSleep + rand.Float64()*(maxSleep-minSleep)
 
-	// Print the parsed, human-readable response.
-	fmt.Println(responseMsg.String())
+				fmt.Printf("\n💤 Sleeping for %.2f seconds...\n", sleepTime)
 
-	// And visualize the raw response packet.
-	visualizer.VisualizePacket(responseBytes)
+				select {
+				case <-ctx.Done():
+					return
+				case <-time.After(time.Duration(sleepTime) * time.Second):
+					// Continue to next iteration
+				}
+			}
+		}
+	}()
+
+	// Wait for shutdown signal
+	<-sigChan
+	fmt.Println("\n🛑 Shutting down...")
+	cancel()
+	time.Sleep(100 * time.Millisecond) // Brief pause for cleanup
 
 }

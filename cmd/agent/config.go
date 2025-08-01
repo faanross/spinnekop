@@ -34,8 +34,8 @@ var Question = models.Question{
 
 var Resolver = models.Resolver{
 	UseSystemDefaults: false,
-	IP:                "172.208.51.75",
-	Port:              53,
+	IP:                "127.0.0.1",
+	Port:              66,
 }
 
 var Answers = []models.Answer{

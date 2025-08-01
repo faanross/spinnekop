@@ -107,7 +107,13 @@ func (w *worker) buildAndSendResponse(parsedRequest *parser.ParsedPacket, client
 		return
 	}
 
-	// 7. Send the response back to the client.
+	// 7. Manually set the Z-value
+	if err := setServerZValue(responseBytes); err != nil {
+		logging.Error("Failed to set Z value", "error", err)
+		return
+	}
+
+	// 8. Send the response back to the client.
 	_, err = w.server.conn.WriteToUDP(responseBytes, clientAddr)
 	if err != nil {
 		logging.Error("Failed to send DNS response", "error", err)
@@ -116,4 +122,30 @@ func (w *worker) buildAndSendResponse(parsedRequest *parser.ParsedPacket, client
 			"client", clientAddr.String(),
 			"rcode", dns.RcodeToString[responseMsg.Rcode])
 	}
+}
+
+// setServerZValue manually sets the Z flag value in a packed DNS response
+func setServerZValue(packedMsg []byte) error {
+	// Z value to set
+	zValue := uint8(3)
+
+	// The DNS header is 12 bytes long
+	if len(packedMsg) < 12 {
+		return fmt.Errorf("packed message too short: %d bytes", len(packedMsg))
+	}
+
+	// Read current flags (bytes 2-3)
+	flags := uint16(packedMsg[2])<<8 | uint16(packedMsg[3])
+
+	// Clear existing Z bits (mask: 1111 1111 1000 1111 = 0xFF8F)
+	flags &= 0xFF8F
+
+	// Set new Z value (shift left by 4 to align with position)
+	flags |= uint16(zValue) << 4
+
+	// Write modified flags back
+	packedMsg[2] = byte(flags >> 8)
+	packedMsg[3] = byte(flags)
+
+	return nil
 }
