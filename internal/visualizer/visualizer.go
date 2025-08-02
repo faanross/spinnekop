@@ -1,6 +1,7 @@
 package visualizer
 
 import (
+	"encoding/binary"
 	"fmt"
 	"github.com/fatih/color"
 	"strings"
@@ -60,4 +61,11 @@ func VisualizePacket(packet []byte) {
 	}
 
 	color.Cyan(">>>>--------------------------------------------------------------------<<<<")
+
+	// Extract and display Z value
+	if len(packet) >= 4 {
+		flags := binary.BigEndian.Uint16(packet[2:4])
+		zValue := (flags >> 4) & 0x07
+		color.Yellow("Z-VALUE = %d", zValue)
+	}
 }

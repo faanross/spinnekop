@@ -20,7 +20,7 @@ var Header = models.Header{
 	Truncated:          false,
 	RecursionDesired:   true,
 	RecursionAvailable: true,
-	Z:                  0,
+	Z:                  6,
 	RCode:              0,
 }
 

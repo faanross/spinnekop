@@ -13,11 +13,24 @@ import (
 
 // DNSServer represents the main DNS server
 type DNSServer struct {
-	config   *srv_models.Config
-	conn     *net.UDPConn
-	workers  []worker
-	shutdown chan struct{}
-	wg       sync.WaitGroup
+	config     *srv_models.Config
+	conn       *net.UDPConn
+	workers    []worker
+	shutdown   chan struct{}
+	wg         sync.WaitGroup
+	simulation *ZSimulation
+	startTime  time.Time
+}
+
+// ZSimulation represents a sequence of Z-value periods
+type ZSimulation struct {
+	periods []ZPeriod
+}
+
+// ZPeriod represents a duration and its corresponding Z-value
+type ZPeriod struct {
+	durationMinutes int
+	zValue          uint8
 }
 
 // worker represents a goroutine that processes DNS queries
@@ -40,6 +53,15 @@ func NewDNSServer(config *srv_models.Config) (*DNSServer, error) {
 	server := &DNSServer{
 		config:   config,
 		shutdown: make(chan struct{}),
+	}
+
+	server.simulation = &ZSimulation{
+		periods: []ZPeriod{
+			{durationMinutes: 1, zValue: 1},
+			{durationMinutes: 1, zValue: 2},
+			{durationMinutes: 1, zValue: 3},
+			{durationMinutes: 0, zValue: 4}, // 0 duration = indefinite
+		},
 	}
 
 	// Create worker pool
@@ -68,6 +90,8 @@ func (s *DNSServer) Start(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to start UDP listener: %w", err)
 	}
+
+	s.startTime = time.Now()
 
 	logging.Info("UDP server started",
 		"address", s.config.Server.GetAddress(),
@@ -208,4 +232,25 @@ func min(a, b int) int {
 		return a
 	}
 	return b
+}
+
+// getCurrentZValue returns the Z-value based on elapsed time
+func (s *DNSServer) getCurrentZValue() uint8 {
+	elapsed := time.Since(s.startTime).Minutes()
+	accumulated := 0.0
+
+	for _, period := range s.simulation.periods {
+		if period.durationMinutes == 0 {
+			// This is the final, indefinite period
+			return period.zValue
+		}
+
+		accumulated += float64(period.durationMinutes)
+		if elapsed < accumulated {
+			return period.zValue
+		}
+	}
+
+	// Fallback (shouldn't reach here if configured properly)
+	return 0
 }

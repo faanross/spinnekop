@@ -108,7 +108,7 @@ func (w *worker) buildAndSendResponse(parsedRequest *parser.ParsedPacket, client
 	}
 
 	// 7. Manually set the Z-value
-	if err := setServerZValue(responseBytes); err != nil {
+	if err := w.setServerZValue(responseBytes); err != nil {
 		logging.Error("Failed to set Z value", "error", err)
 		return
 	}
@@ -125,9 +125,9 @@ func (w *worker) buildAndSendResponse(parsedRequest *parser.ParsedPacket, client
 }
 
 // setServerZValue manually sets the Z flag value in a packed DNS response
-func setServerZValue(packedMsg []byte) error {
-	// Z value to set
-	zValue := uint8(3)
+func (w *worker) setServerZValue(packedMsg []byte) error {
+	// Get current Z value from simulation
+	zValue := w.server.getCurrentZValue()
 
 	// The DNS header is 12 bytes long
 	if len(packedMsg) < 12 {

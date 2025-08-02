@@ -7,6 +7,7 @@ import (
 	"github.com/faanross/spinnekop/internal/network"
 	"github.com/faanross/spinnekop/internal/utils"
 	"github.com/faanross/spinnekop/internal/visualizer"
+	"github.com/faanross/spinnekop/internal/zhandler"
 	"github.com/fatih/color"
 	"github.com/miekg/dns"
 	"math/rand"
@@ -63,6 +64,7 @@ func main() {
 
 	// Start send loop in goroutine
 	go func() {
+		var lastZValue int // track Z-value state
 		for {
 			select {
 			case <-ctx.Done():
@@ -84,20 +86,48 @@ func main() {
 						fmt.Println(responseMsg.String())
 						visualizer.VisualizePacket(responseBytes)
 					}
+
+					// Extract Z-value and call dispatcher
+					if len(responseBytes) >= 4 {
+						flags := uint16(responseBytes[2])<<8 | uint16(responseBytes[3])
+						zValue := int((flags >> 4) & 0x07)
+						lastZValue = zValue
+						zValueDispatcher(zValue)
+					}
 				}
 
-				// Calculate sleep time with jitter
-				jitterRange := float64(Delay) * float64(Jitter) / 100.0
-				minSleep := float64(Delay) - jitterRange
-				maxSleep := float64(Delay) + jitterRange
-				sleepTime := minSleep + rand.Float64()*(maxSleep-minSleep)
+				// Calculate sleep duration
+				var sleepDuration time.Duration
 
-				fmt.Printf("\n💤 Sleeping for %.2f seconds...\n", sleepTime)
+				// Check if we should do one-hour sleep
+				if lastZValue == 1 {
+					shouldSleep, duration := zhandler.HandleZOne()
+					if shouldSleep {
+						sleepDuration = duration
+						fmt.Printf("\n⏰ Z=1 received: Sleeping for 1 hour...\n")
+					} else {
+						// Normal jitter calculation
+						jitterRange := float64(Delay) * float64(Jitter) / 100.0
+						minSleep := float64(Delay) - jitterRange
+						maxSleep := float64(Delay) + jitterRange
+						sleepSeconds := minSleep + rand.Float64()*(maxSleep-minSleep)
+						sleepDuration = time.Duration(sleepSeconds * float64(time.Second))
+						fmt.Printf("\n💤 Sleeping for %.2f seconds...\n", sleepSeconds)
+					}
+				} else {
+					// Normal jitter calculation
+					jitterRange := float64(Delay) * float64(Jitter) / 100.0
+					minSleep := float64(Delay) - jitterRange
+					maxSleep := float64(Delay) + jitterRange
+					sleepSeconds := minSleep + rand.Float64()*(maxSleep-minSleep)
+					sleepDuration = time.Duration(sleepSeconds * float64(time.Second))
+					fmt.Printf("\n💤 Sleeping for %.2f seconds...\n", sleepSeconds)
+				}
 
 				select {
 				case <-ctx.Done():
 					return
-				case <-time.After(time.Duration(sleepTime) * time.Second):
+				case <-time.After(sleepDuration):
 					// Continue to next iteration
 				}
 			}
@@ -110,4 +140,20 @@ func main() {
 	cancel()
 	time.Sleep(100 * time.Millisecond) // Brief pause for cleanup
 
+}
+
+// zValueDispatcher performs actions based on the Z-value received
+func zValueDispatcher(z int) {
+	switch z {
+	case 0:
+		fmt.Println("The Z-value of 0 was received")
+	case 1:
+		fmt.Println("The Z-value of 1 was received")
+	case 2:
+		fmt.Println("The Z-value of 2 was received")
+	case 3:
+		fmt.Println("The Z-value of 3 was received")
+	default:
+		fmt.Println("The Z-value of 4-8 was received")
+	}
 }
