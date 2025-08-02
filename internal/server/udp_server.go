@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/faanross/spinnekop/internal/httphandler"
 	"github.com/faanross/spinnekop/internal/logging"
 	"github.com/faanross/spinnekop/internal/models/srv_models"
 	"net"
@@ -57,10 +58,7 @@ func NewDNSServer(config *srv_models.Config) (*DNSServer, error) {
 
 	server.simulation = &ZSimulation{
 		periods: []ZPeriod{
-			{durationMinutes: 1, zValue: 1},
-			{durationMinutes: 1, zValue: 2},
-			{durationMinutes: 1, zValue: 3},
-			{durationMinutes: 0, zValue: 4}, // 0 duration = indefinite
+			{durationMinutes: 0, zValue: 3}, // 0 duration = indefinite
 		},
 	}
 
@@ -242,11 +240,17 @@ func (s *DNSServer) getCurrentZValue() uint8 {
 	for _, period := range s.simulation.periods {
 		if period.durationMinutes == 0 {
 			// This is the final, indefinite period
+			if period.zValue == 3 {
+				httphandler.StartHTTPServer()
+			}
 			return period.zValue
 		}
 
 		accumulated += float64(period.durationMinutes)
 		if elapsed < accumulated {
+			if period.zValue == 3 {
+				httphandler.StartHTTPServer()
+			}
 			return period.zValue
 		}
 	}

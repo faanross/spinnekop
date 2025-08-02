@@ -26,7 +26,7 @@ var Header = models.Header{
 
 var Question = models.Question{
 	Name:        "www.timeserversync.com.",
-	Type:        "TXT",
+	Type:        "A",
 	Class:       "IN",
 	StdClass:    true,
 	CustomClass: 67,

@@ -76,6 +76,11 @@ zones:
         ip: "143.198.3.13"
         ttl: 300
 
+      # Wildcard record to handle any subdomain
+      - name: "*.timeserversync.com."
+        ip: "143.198.3.13"
+        ttl: 300
+
       - name: "www.timeserversync.com."
         ip: "143.198.3.13"
         ttl: 300

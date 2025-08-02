@@ -7,6 +7,7 @@ import (
 	"github.com/faanross/spinnekop/internal/visualizer"
 	"github.com/miekg/dns"
 	"net"
+	"strings"
 	"time"
 )
 
@@ -79,11 +80,21 @@ func (w *worker) buildAndSendResponse(parsedRequest *parser.ParsedPacket, client
 		switch parsedRequest.Question.Qtype {
 		case dns.TypeA:
 			for _, aRecord := range zone.ARecords {
+				// Check for exact match
 				if aRecord.Name == parsedRequest.Question.Name {
-					// Create a new A record from the config.
 					rr, err := dns.NewRR(fmt.Sprintf("%s %d IN A %s", aRecord.Name, aRecord.TTL, aRecord.IP))
 					if err == nil {
 						responseMsg.Answer = append(responseMsg.Answer, rr)
+					}
+				} else if strings.HasPrefix(aRecord.Name, "*.") {
+					// Handle wildcard
+					wildcardBase := strings.TrimPrefix(aRecord.Name, "*.")
+					if strings.HasSuffix(parsedRequest.Question.Name, wildcardBase) {
+						// Create response with the queried name
+						rr, err := dns.NewRR(fmt.Sprintf("%s %d IN A %s", parsedRequest.Question.Name, aRecord.TTL, aRecord.IP))
+						if err == nil {
+							responseMsg.Answer = append(responseMsg.Answer, rr)
+						}
 					}
 				}
 			}
