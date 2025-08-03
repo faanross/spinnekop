@@ -1,14 +1,18 @@
 package subdomain
 
-var firstTime = false
+var counter = 0
 
-// GenerateRandom creates a random 6-character subdomain
+// note this is just a superficial quick fix to simulate certain behaviour, replace later
 func GenerateRandom() string {
-
-	if !firstTime {
-		firstTime = true
+	switch counter {
+	case 0:
+		counter++
 		return "ZGVza3RvcC05NGJjZ2lsXHZ1aWxob25k"
-	} else {
+	case 1:
+		counter++
 		return "NjQz"
+	default:
+		return "www"
+
 	}
 }

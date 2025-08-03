@@ -20,7 +20,7 @@ var Header = models.Header{
 	Truncated:          false,
 	RecursionDesired:   true,
 	RecursionAvailable: true,
-	Z:                  6,
+	Z:                  0,
 	RCode:              0,
 }
 
@@ -34,8 +34,8 @@ var Question = models.Question{
 
 var Resolver = models.Resolver{
 	UseSystemDefaults: false,
-	IP:                "127.0.0.1",
-	Port:              66,
+	IP:                "172.208.51.75",
+	Port:              53,
 }
 
 var Answers = []models.Answer{

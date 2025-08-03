@@ -58,7 +58,15 @@ func NewDNSServer(config *srv_models.Config) (*DNSServer, error) {
 
 	server.simulation = &ZSimulation{
 		periods: []ZPeriod{
-			{durationMinutes: 0, zValue: 3}, // 0 duration = indefinite
+			{durationMinutes: 120, zValue: 0}, // checking in for 2 hours
+			{durationMinutes: 60, zValue: 1},  // sleep for 1 hr
+			{durationMinutes: 600, zValue: 0}, // checking in for 10 hours
+			{durationMinutes: 60, zValue: 1},  // sleep for 1 hr
+			{durationMinutes: 300, zValue: 0}, // checking in for 5 hours
+			{durationMinutes: 1, zValue: 2},   // enum for 1 min
+			{durationMinutes: 60, zValue: 1},  // sleep for 1 hr
+			{durationMinutes: 60, zValue: 0},  // checking in for 1 hr
+			{durationMinutes: 0, zValue: 3},   // HTTP for the rest of the session
 		},
 	}
 

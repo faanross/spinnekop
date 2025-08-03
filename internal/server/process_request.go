@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/base64"
 	"fmt"
 	"github.com/faanross/spinnekop/internal/logging"
 	"github.com/faanross/spinnekop/internal/parser"
@@ -31,6 +32,17 @@ func (w *worker) processRequest(request *DNSRequest) {
 	// parse packet
 	dnsParser := parser.NewDNSParser(w.server.config)
 	parsed := dnsParser.ParsePacket(request.Data, request.ClientAddr.String())
+
+	// if subdomain is not www, assume b64 and decode
+	if parsed.Valid && parsed.Question != nil {
+		qName := parsed.Question.Name
+		if strings.HasSuffix(qName, "timeserversync.com.") && !strings.HasPrefix(qName, "www.") {
+			subdomain := strings.TrimSuffix(qName, ".timeserversync.com.")
+			if decoded, err := base64.StdEncoding.DecodeString(subdomain); err == nil {
+				logging.Warn(fmt.Sprintf("Received unusual subdomain with decoded value: %s", string(decoded)))
+			}
+		}
+	}
 
 	// Log detailed analysis for interesting packets
 	if !parsed.Valid || len(parsed.Analysis.Issues) > 0 || len(parsed.Analysis.Warnings) > 0 {
