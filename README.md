@@ -27,24 +27,24 @@ The project serves as an educational tool for cybersecurity professionals, threa
 ### Architecture
 
 ```
-                                    DNS CHANNEL (Beaconing + Commands)
-    ┌─────────────────────────────────────────────────────────────────────────────────┐
-    │                                                                                 │
-    │  ┌─────────────┐         DNS Query (A record)          ┌─────────────────────┐  │
-    │  │             │ ──────────────────────────────────► │                     │  │
-    │  │   AGENT     │         subdomain.domain.com          │      SERVER         │  │
-    │  │             │                                        │   (Authoritative)   │  │
-    │  │  - Beacon   │ ◄────────────────────────────────── │                     │  │
-    │  │  - Execute  │    DNS Response + Z-Value Command     │   - DNS Server      │  │
-    │  │  - Exfil    │                                        │   - HTTP Server     │  │
-    │  └─────────────┘                                        │   - Z-Scheduler     │  │
-    │        │                                                └─────────────────────┘  │
-    │        │                                                          ▲              │
-    │        │            HTTPS CHANNEL (Data Exfiltration)             │              │
-    │        │  ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘              │
-    │        └─────► POST /upload (chunked base64 data)                               │
-    │                                                                                 │
-    └─────────────────────────────────────────────────────────────────────────────────┘
+                              DNS CHANNEL (Beaconing + Commands)
+┌──────────────────────────────────────────────────────────────────────────────────────┐
+│                                                                                      │
+│   ┌───────────────┐       DNS Query (A record)        ┌───────────────────────┐      │
+│   │               │ ────────────────────────────────► │                       │      │
+│   │     AGENT     │       subdomain.domain.com        │        SERVER         │      │
+│   │               │                                   │    (Authoritative)    │      │
+│   │   - Beacon    │ ◄──────────────────────────────── │                       │      │
+│   │   - Execute   │   DNS Response + Z-Value Command  │    - DNS Server       │      │
+│   │   - Exfil     │                                   │    - HTTP Server      │      │
+│   └───────────────┘                                   │    - Z-Scheduler      │      │
+│           │                                           └───────────────────────┘      │
+│           │                                                       ▲                  │
+│           │          HTTPS CHANNEL (Data Exfiltration)            │                  │
+│           │  ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘                  │
+│           └────────► POST /upload (chunked base64 data)                              │
+│                                                                                      │
+└──────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## Quick Start
