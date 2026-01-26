@@ -27,24 +27,24 @@ The project serves as an educational tool for cybersecurity professionals, threa
 ### Architecture
 
 ```
-                              DNS CHANNEL (Beaconing + Commands)
-┌──────────────────────────────────────────────────────────────────────────────────────┐
-│                                                                                      │
-│   ┌───────────────┐       DNS Query (A record)        ┌───────────────────────┐      │
-│   │               │ ────────────────────────────────► │                       │      │
-│   │     AGENT     │       subdomain.domain.com        │        SERVER         │      │
-│   │               │                                   │    (Authoritative)    │      │
-│   │   - Beacon    │ ◄──────────────────────────────── │                       │      │
-│   │   - Execute   │   DNS Response + Z-Value Command  │    - DNS Server       │      │
-│   │   - Exfil     │                                   │    - HTTP Server      │      │
-│   └───────────────┘                                   │    - Z-Scheduler      │      │
-│           │                                           └───────────────────────┘      │
-│           │                                                       ▲                  │
-│           │          HTTPS CHANNEL (Data Exfiltration)            │                  │
-│           │  ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘                  │
-│           └────────► POST /upload (chunked base64 data)                              │
-│                                                                                      │
-└──────────────────────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│              DNS CHANNEL (Beaconing + Commands)             │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌─────────────┐    DNS Query (A record)   ┌─────────────┐  │
+│  │             │ ────────────────────────► │             │  │
+│  │    AGENT    │   subdomain.domain.com    │   SERVER    │  │
+│  │             │                           │ (Authority) │  │
+│  │  - Beacon   │ ◄──────────────────────── │             │  │
+│  │  - Execute  │  DNS Response + Z-Command │ - DNS Srv   │  │
+│  │  - Exfil    │                           │ - HTTP Srv  │  │
+│  └─────────────┘                           │ - Z-Sched   │  │
+│         │                                  └─────────────┘  │
+│         │         HTTPS CHANNEL (Exfil)          ▲          │
+│         │  ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘          │
+│         └──► POST /upload (chunked base64)                  │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ## Quick Start
@@ -172,45 +172,45 @@ DNS Header Flags (16 bits):
 
 ```
 PHASE 1: DNS Beaconing
-────────────────────────────────────────────────────────
-Agent                                              Server
-  │                                                   │
-  │──── DNS Query: www.timeserversync.com ──────────►│
-  │                                                   │
-  │◄─── DNS Response + Z=0 (continue) ───────────────│
-  │                                                   │
-  │     [Sleep with jitter]                           │
-  │                                                   │
+──────────────────────────────────────────────────
+Agent                                       Server
+  │                                            │
+  │─── DNS Query: www.timeserversync.com ─────►│
+  │                                            │
+  │◄── DNS Response + Z=0 (continue) ──────────│
+  │                                            │
+  │    [Sleep with jitter]                     │
+  │                                            │
 
 PHASE 2: Enumeration Mode (Z=2)
-────────────────────────────────────────────────────────
-Agent                                              Server
-  │                                                   │
-  │──── DNS Query: www.timeserversync.com ──────────►│
-  │                                                   │
-  │◄─── DNS Response + Z=2 (enumerate) ──────────────│
-  │                                                   │
-  │     [Agent enables subdomain encoding]            │
-  │                                                   │
-  │──── DNS Query: ZGVza3RvcC05...timeserversync.com─►│
-  │     (Base64 encoded hostname\username)            │
-  │                                                   │
+──────────────────────────────────────────────────
+Agent                                       Server
+  │                                            │
+  │─── DNS Query: www.timeserversync.com ─────►│
+  │                                            │
+  │◄── DNS Response + Z=2 (enumerate) ─────────│
+  │                                            │
+  │    [Agent enables subdomain encoding]      │
+  │                                            │
+  │─── DNS: ZGVza3RvcC05...timeserversync.com─►│
+  │    (Base64 hostname\username)              │
+  │                                            │
 
 PHASE 3: HTTP Escalation (Z=3)
-────────────────────────────────────────────────────────
-Agent                                              Server
-  │                                                   │
-  │──── DNS Query: www.timeserversync.com ──────────►│
-  │                                                   │
-  │◄─── DNS Response + Z=3 (HTTP mode) ──────────────│
-  │                                                   │
-  │──── HTTP GET / (verify connectivity) ───────────►│
-  │                                                   │
-  │◄─── HTTP 200 OK ─────────────────────────────────│
-  │                                                   │
-  │──── HTTP POST /upload?chunk=0&total=N ──────────►│
-  │     (Base64 encoded file chunks)                  │
-  │                                                   │
+──────────────────────────────────────────────────
+Agent                                       Server
+  │                                            │
+  │─── DNS Query: www.timeserversync.com ─────►│
+  │                                            │
+  │◄── DNS Response + Z=3 (HTTP mode) ─────────│
+  │                                            │
+  │─── HTTP GET / (verify connectivity) ──────►│
+  │                                            │
+  │◄── HTTP 200 OK ────────────────────────────│
+  │                                            │
+  │─── HTTP POST /upload?chunk=0&total=N ─────►│
+  │    (Base64 encoded file chunks)            │
+  │                                            │
 ```
 
 ### Subdomain Data Encoding

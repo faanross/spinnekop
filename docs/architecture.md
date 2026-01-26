@@ -23,35 +23,29 @@ This separation provides operational advantages:
 ### High-Level Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                              TARGET NETWORK                                  │
-│                                                                             │
-│    ┌──────────────┐                              ┌──────────────────┐       │
-│    │    AGENT     │◄─────── Z-Commands ──────────│  LOCAL RESOLVER  │       │
-│    │              │                              │                  │       │
-│    │  beacon.go   │────── DNS Queries ──────────►│  (Recursive)     │       │
-│    │  http.go     │                              └────────┬─────────┘       │
-│    │  exfil.go    │                                       │                 │
-│    └──────┬───────┘                                       │                 │
-│           │                                               │                 │
-│           │ HTTPS (when Z=3)                              │ DNS             │
-│           │                                               │                 │
-└───────────┼───────────────────────────────────────────────┼─────────────────┘
-            │                                               │
-            │              INTERNET                         │
-            │                                               │
-┌───────────▼───────────────────────────────────────────────▼─────────────────┐
-│                              C2 SERVER                                       │
-│                                                                             │
-│    ┌──────────────┐    ┌──────────────┐    ┌──────────────┐                │
-│    │  DNS Server  │◄──►│ Z-Scheduler  │◄──►│ HTTP Server  │                │
-│    │   (Port 53)  │    │              │    │  (Port 8080) │                │
-│    │              │    │  Command     │    │              │                │
-│    │  Wildcard    │    │  Queue       │    │  /upload     │                │
-│    │  A Records   │    │              │    │  Endpoint    │                │
-│    └──────────────┘    └──────────────┘    └──────────────┘                │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────┐
+│                    TARGET NETWORK                      │
+│                                                        │
+│  ┌──────────┐                     ┌───────────────┐    │
+│  │  AGENT   │◄── Z-Commands ──────│ LOCAL RESOLVER│    │
+│  │          │                     │  (Recursive)  │    │
+│  │ beacon   │── DNS Queries ─────►│               │    │
+│  │ http     │                     └───────┬───────┘    │
+│  │ exfil    │                             │            │
+│  └────┬─────┘                             │            │
+│       │ HTTPS (when Z=3)                  │ DNS        │
+└───────┼───────────────────────────────────┼────────────┘
+        │           INTERNET                │
+┌───────▼───────────────────────────────────▼────────────┐
+│                      C2 SERVER                         │
+│                                                        │
+│  ┌──────────┐   ┌───────────┐   ┌──────────┐          │
+│  │ DNS Srv  │◄─►│ Z-Sched   │◄─►│ HTTP Srv │          │
+│  │ (Port 53)│   │ Cmd Queue │   │ (:8080)  │          │
+│  │ Wildcard │   │           │   │ /upload  │          │
+│  └──────────┘   └───────────┘   └──────────┘          │
+│                                                        │
+└────────────────────────────────────────────────────────┘
 ```
 
 ### Agent Components
@@ -186,72 +180,66 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 ### Phase 1: Initial Beacon
 
 ```
-AGENT                           LOCAL RESOLVER                    C2 SERVER
-  │                                   │                               │
-  │─── DNS Query ────────────────────►│                               │
-  │    www.c2domain.com (A)           │                               │
-  │                                   │─── Recursive Query ──────────►│
-  │                                   │    www.c2domain.com (A)       │
-  │                                   │                               │
-  │                                   │◄── Response (Z=0) ────────────│
-  │                                   │    IP: 1.2.3.4                │
-  │◄── Response (Z=0) ────────────────│                               │
-  │    IP: 1.2.3.4                    │                               │
-  │                                   │                               │
-  │    [Agent: Z=0, continue]         │                               │
-  │    [Sleep with jitter]            │                               │
+AGENT                  RESOLVER                   C2 SERVER
+  │                        │                           │
+  │── DNS Query ──────────►│                           │
+  │   www.c2domain.com     │                           │
+  │                        │── Recursive Query ───────►│
+  │                        │   www.c2domain.com        │
+  │                        │                           │
+  │                        │◄─ Response (Z=0) ─────────│
+  │                        │   IP: 1.2.3.4             │
+  │◄─ Response (Z=0) ──────│                           │
+  │   IP: 1.2.3.4          │                           │
+  │                        │                           │
+  │   [Z=0: continue]      │                           │
+  │   [Sleep with jitter]  │                           │
 ```
 
 ### Phase 2: Enumeration Command
 
 ```
-AGENT                           LOCAL RESOLVER                    C2 SERVER
-  │                                   │                               │
-  │─── DNS Query ────────────────────►│                               │
-  │    www.c2domain.com (A)           │                               │
-  │                                   │─── Recursive Query ──────────►│
-  │                                   │                               │
-  │                                   │◄── Response (Z=2) ────────────│
-  │◄── Response (Z=2) ────────────────│                               │
-  │                                   │                               │
-  │    [Agent: Z=2, enumerate]        │                               │
-  │    [Enable subdomain encoding]    │                               │
-  │                                   │                               │
-  │─── DNS Query ────────────────────►│                               │
-  │    REVTS1RPUC1BQk.c2domain.com    │─── Recursive Query ──────────►│
-  │    (Base64: "DESKTOP-ABC...")     │                               │
-  │                                   │    [Server decodes subdomain] │
-  │                                   │◄── Response ──────────────────│
-  │◄── Response ──────────────────────│                               │
+AGENT                  RESOLVER                   C2 SERVER
+  │                        │                           │
+  │── DNS Query ──────────►│                           │
+  │   www.c2domain.com     │── Recursive Query ───────►│
+  │                        │                           │
+  │                        │◄─ Response (Z=2) ─────────│
+  │◄─ Response (Z=2) ──────│                           │
+  │                        │                           │
+  │   [Z=2: enumerate]     │                           │
+  │   [Enable subdomain]   │                           │
+  │                        │                           │
+  │── DNS Query ──────────►│                           │
+  │   REVTS1RP...domain    │── Recursive Query ───────►│
+  │   (Base64 data)        │   [Server decodes]        │
+  │                        │◄─ Response ───────────────│
+  │◄─ Response ────────────│                           │
 ```
 
 ### Phase 3: HTTP Escalation
 
 ```
-AGENT                                                            C2 SERVER
-  │                                                                   │
-  │    [Received Z=3, switch to HTTP]                                 │
-  │                                                                   │
-  │─── HTTP GET / ───────────────────────────────────────────────────►│
-  │    (Verify connectivity)                                          │
-  │                                                                   │
-  │◄── HTTP 200 OK ───────────────────────────────────────────────────│
-  │                                                                   │
-  │─── HTTP POST /upload?chunk=0&total=3 ────────────────────────────►│
-  │    [Base64 chunk 1]                                               │
-  │                                                                   │
-  │◄── HTTP 200 OK ───────────────────────────────────────────────────│
-  │                                                                   │
-  │─── HTTP POST /upload?chunk=1&total=3 ────────────────────────────►│
-  │    [Base64 chunk 2]                                               │
-  │                                                                   │
-  │◄── HTTP 200 OK ───────────────────────────────────────────────────│
-  │                                                                   │
-  │─── HTTP POST /upload?chunk=2&total=3 ────────────────────────────►│
-  │    [Base64 chunk 3]                                               │
-  │                                                                   │
-  │◄── HTTP 200 OK ───────────────────────────────────────────────────│
-  │    [Server reassembles file]                                      │
+AGENT                                         C2 SERVER
+  │                                                │
+  │   [Received Z=3, switch to HTTP]               │
+  │                                                │
+  │── HTTP GET / (verify connectivity) ───────────►│
+  │                                                │
+  │◄─ HTTP 200 OK ─────────────────────────────────│
+  │                                                │
+  │── HTTP POST /upload?chunk=0&total=3 ──────────►│
+  │   [Base64 chunk 1]                             │
+  │◄─ HTTP 200 OK ─────────────────────────────────│
+  │                                                │
+  │── HTTP POST /upload?chunk=1&total=3 ──────────►│
+  │   [Base64 chunk 2]                             │
+  │◄─ HTTP 200 OK ─────────────────────────────────│
+  │                                                │
+  │── HTTP POST /upload?chunk=2&total=3 ──────────►│
+  │   [Base64 chunk 3]                             │
+  │◄─ HTTP 200 OK ─────────────────────────────────│
+  │   [Server reassembles file]                    │
 ```
 
 ## Security Considerations
